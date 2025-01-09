@@ -58,69 +58,50 @@ result = cursor.execute("""SELECT COUNT(*) FROM Data""").fetchone()
 if result[0] == 0:
     new_game = font.render('Начать новую игру', True, (255, 255, 255))
     screen.blit(new_game, (((width // 2) - (new_game.get_width() // 2)), 550))
+    how_to_play = font.render('Как играть', True, (255, 255, 255))
+    screen.blit(how_to_play, (width // 2 - how_to_play.get_width() // 2, 610))
     settings = font.render('Настройки', True, (255, 255, 255))
-    screen.blit(settings, (((width // 2) - (settings.get_width() // 2)), 610))
+    screen.blit(settings, (((width // 2) - (settings.get_width() // 2)), 670))
     exit = font.render('Выйти из игры', True, (255, 255, 255))
-    screen.blit(exit, (((width // 2) - (exit.get_width() // 2)), 670))
+    screen.blit(exit, (((width // 2) - (exit.get_width() // 2)), 730))
 else:
     new_game = font.render('Начать новую игру', True, (255, 255, 255))
     screen.blit(new_game, (((width // 2) - (new_game.get_width() // 2)), 550))
     resume = font.render('Продолжить', True, (255, 255, 255))
     screen.blit(new_game, (((width // 2) - (resume.get_width() // 2)), 610))
+    how_to_play = font.render('Как играть', True, (255, 255, 255))
+    screen.blit(how_to_play, (width // 2 - how_to_play.get_width() // 2, 670))
     settings = font.render('Настройки', True, (255, 255, 255))
-    screen.blit(settings, (((width // 2) - (settings.get_width() // 2)), 670))
+    screen.blit(settings, (((width // 2) - (settings.get_width() // 2)), 730))
     exit = font.render('Выйти из игры', True, (255, 255, 255))
-    screen.blit(exit, (((width // 2) - (exit.get_width() // 2)), 730))
+    screen.blit(exit, (((width // 2) - (exit.get_width() // 2)), 780))
 
 def blit_main(result):
     global new_game, settings, exit, resume
     if result == 0:
         screen.blit(new_game, (((width // 2) - (new_game.get_width() // 2)), 550))
-        screen.blit(settings, (((width // 2) - (settings.get_width() // 2)), 610))
-        screen.blit(exit, (((width // 2) - (exit.get_width() // 2)), 670))
+        screen.blit(how_to_play, (width // 2 - how_to_play.get_width() // 2, 610))
+        screen.blit(settings, (((width // 2) - (settings.get_width() // 2)), 670))
+        screen.blit(exit, (((width // 2) - (exit.get_width() // 2)), 730))
     else:
         screen.blit(new_game, (((width // 2) - (new_game.get_width() // 2)), 550))
         screen.blit(resume, (((width // 2) - (resume.get_width() // 2)), 610))
-        screen.blit(settings, (((width // 2) - (settings.get_width() // 2)), 670))
-        screen.blit(exit, (((width // 2) - (exit.get_width() // 2)), 730))
+        screen.blit(how_to_play, (width // 2 - how_to_play.get_width() // 2, 670))
+        screen.blit(settings, (((width // 2) - (settings.get_width() // 2)), 730))
+        screen.blit(exit, (((width // 2) - (exit.get_width() // 2)), 780))
 
 
 def motion_main(result):
-    global new_game, settings, exit, resume
+    global new_game, settings, exit, resume, how_to_play
     if result == 0:
         if ((event.pos[0] >= ((width // 2) - (new_game.get_width() // 2)) and
             event.pos[0] <= ((width // 2) - (new_game.get_width() // 2)) + new_game.get_width()) and
                 (event.pos[1] >= 550 and event.pos[1] <= 550 + new_game.get_height())):
             new_game = font_enlarged.render('Начать новую игру', True, (255, 255, 255))
-        if ((event.pos[0] >= ((width // 2) - (settings.get_width() // 2)) and
-            event.pos[0] <= ((width // 2) - (settings.get_width() // 2)) + settings.get_width()) and
-                (event.pos[1] >= 610 and event.pos[1] <= 610 + settings.get_height())):
-            settings = font_enlarged.render('Настройки', True, (255, 255, 255))
-        if ((event.pos[0] >= ((width // 2) - (exit.get_width() // 2)) and
-            event.pos[0] <= ((width // 2) - (exit.get_width() // 2)) + exit.get_width()) and
-                (event.pos[1] >= 670 and event.pos[1] <= 670 + exit.get_height())):
-            exit = font_enlarged.render('Выйти из игры', True, (255, 255, 255))
-        if ((event.pos[0] < ((width // 2) - (new_game.get_width() // 2)) or
-            event.pos[0] > ((width // 2) - (new_game.get_width() // 2)) + new_game.get_width()) or
-                (event.pos[1] < 550 or event.pos[1] > 550 + new_game.get_height())):
-            new_game = font.render('Начать новую игру', True, (255, 255, 255))
-        if ((event.pos[0] < ((width // 2) - (settings.get_width() // 2)) or
-            event.pos[0] > ((width // 2) - (settings.get_width() // 2)) + settings.get_width()) or
-                (event.pos[1] < 610 or event.pos[1] > 610 + settings.get_height())):
-            settings = font.render('Настройки', True, (255, 255, 255))
-        if ((event.pos[0] < ((width // 2) - (exit.get_width() // 2)) or
-            event.pos[0] > ((width // 2) - (exit.get_width() // 2)) + exit.get_width()) or
-                (event.pos[1] < 670 or event.pos[1] > 670 + exit.get_height())):
-            exit = font.render('Выйти из игры', True, (255, 255, 255))
-    else:
-        if ((event.pos[0] >= ((width // 2) - (new_game.get_width() // 2)) and
-            event.pos[0] <= ((width // 2) - (new_game.get_width() // 2)) + new_game.get_width()) and
-                (event.pos[1] >= 550 and event.pos[1] <= 550 + new_game.get_height())):
-            new_game = font_enlarged.render('Начать новую игру', True, (255, 255, 255))
-        if ((event.pos[0] >= ((width // 2) - (resume.get_width() // 2)) and
-            event.pos[0] <= ((width // 2) - (resume.get_width() // 2)) + resume.get_width()) and
-                (event.pos[1] >= 610 and event.pos[1] <= 610 + resume.get_height())):
-            resume = font_enlarged.render('Продолжить', True, (255, 255, 255))
+        if ((event.pos[0] >= ((width // 2) - (how_to_play.get_width() // 2)) and
+             event.pos[0] <= ((width // 2) - (how_to_play.get_width() // 2)) + how_to_play.get_width()) and
+                (event.pos[1] >= 610 and event.pos[1] <= 610 + how_to_play.get_height())):
+            how_to_play = font_enlarged.render('Как играть', True, (255, 255, 255))
         if ((event.pos[0] >= ((width // 2) - (settings.get_width() // 2)) and
             event.pos[0] <= ((width // 2) - (settings.get_width() // 2)) + settings.get_width()) and
                 (event.pos[1] >= 670 and event.pos[1] <= 670 + settings.get_height())):
@@ -133,10 +114,10 @@ def motion_main(result):
             event.pos[0] > ((width // 2) - (new_game.get_width() // 2)) + new_game.get_width()) or
                 (event.pos[1] < 550 or event.pos[1] > 550 + new_game.get_height())):
             new_game = font.render('Начать новую игру', True, (255, 255, 255))
-        if ((event.pos[0] < ((width // 2) - (resume.get_width() // 2)) or
-            event.pos[0] > ((width // 2) - (resume.get_width() // 2)) + resume.get_width()) or
-                (event.pos[1] < 610 or event.pos[1] > 610 + resume.get_height())):
-            resume = font.render('Продолжить', True, (255, 255, 255))
+        if ((event.pos[0] < ((width // 2) - (how_to_play.get_width() // 2)) or
+             event.pos[0] > ((width // 2) - (how_to_play.get_width() // 2)) + how_to_play.get_width()) or
+                (event.pos[1] < 610 or event.pos[1] > 610 + how_to_play.get_height())):
+            how_to_play = font.render('Как играть', True, (255, 255, 255))
         if ((event.pos[0] < ((width // 2) - (settings.get_width() // 2)) or
             event.pos[0] > ((width // 2) - (settings.get_width() // 2)) + settings.get_width()) or
                 (event.pos[1] < 670 or event.pos[1] > 670 + settings.get_height())):
@@ -144,6 +125,47 @@ def motion_main(result):
         if ((event.pos[0] < ((width // 2) - (exit.get_width() // 2)) or
             event.pos[0] > ((width // 2) - (exit.get_width() // 2)) + exit.get_width()) or
                 (event.pos[1] < 730 or event.pos[1] > 730 + exit.get_height())):
+            exit = font.render('Выйти из игры', True, (255, 255, 255))
+    else:
+        if ((event.pos[0] >= ((width // 2) - (new_game.get_width() // 2)) and
+            event.pos[0] <= ((width // 2) - (new_game.get_width() // 2)) + new_game.get_width()) and
+                (event.pos[1] >= 550 and event.pos[1] <= 550 + new_game.get_height())):
+            new_game = font_enlarged.render('Начать новую игру', True, (255, 255, 255))
+        if ((event.pos[0] >= ((width // 2) - (resume.get_width() // 2)) and
+            event.pos[0] <= ((width // 2) - (resume.get_width() // 2)) + resume.get_width()) and
+                (event.pos[1] >= 610 and event.pos[1] <= 610 + resume.get_height())):
+            resume = font_enlarged.render('Продолжить', True, (255, 255, 255))
+        if ((event.pos[0] >= ((width // 2) - (how_to_play.get_width() // 2)) and
+             event.pos[0] <= ((width // 2) - (how_to_play.get_width() // 2)) + how_to_play.get_width()) and
+                (event.pos[1] >= 670 and event.pos[1] <= 670 + how_to_play.get_height())):
+            how_to_play = font_enlarged.render('Как играть', True, (255, 255, 255))
+        if ((event.pos[0] >= ((width // 2) - (settings.get_width() // 2)) and
+            event.pos[0] <= ((width // 2) - (settings.get_width() // 2)) + settings.get_width()) and
+                (event.pos[1] >= 730 and event.pos[1] <= 730 + settings.get_height())):
+            settings = font_enlarged.render('Настройки', True, (255, 255, 255))
+        if ((event.pos[0] >= ((width // 2) - (exit.get_width() // 2)) and
+            event.pos[0] <= ((width // 2) - (exit.get_width() // 2)) + exit.get_width()) and
+                (event.pos[1] >= 780 and event.pos[1] <= 780 + exit.get_height())):
+            exit = font_enlarged.render('Выйти из игры', True, (255, 255, 255))
+        if ((event.pos[0] < ((width // 2) - (new_game.get_width() // 2)) or
+            event.pos[0] > ((width // 2) - (new_game.get_width() // 2)) + new_game.get_width()) or
+                (event.pos[1] < 550 or event.pos[1] > 550 + new_game.get_height())):
+            new_game = font.render('Начать новую игру', True, (255, 255, 255))
+        if ((event.pos[0] < ((width // 2) - (resume.get_width() // 2)) or
+            event.pos[0] > ((width // 2) - (resume.get_width() // 2)) + resume.get_width()) or
+                (event.pos[1] < 610 or event.pos[1] > 610 + resume.get_height())):
+            resume = font.render('Продолжить', True, (255, 255, 255))
+        if ((event.pos[0] < ((width // 2) - (how_to_play.get_width() // 2)) or
+             event.pos[0] > ((width // 2) - (how_to_play.get_width() // 2)) + how_to_play.get_width()) or
+                (event.pos[1] < 670 or event.pos[1] > 670 + how_to_play.get_height())):
+            how_to_play = font.render('Как играть', True, (255, 255, 255))
+        if ((event.pos[0] < ((width // 2) - (settings.get_width() // 2)) or
+            event.pos[0] > ((width // 2) - (settings.get_width() // 2)) + settings.get_width()) or
+                (event.pos[1] < 730 or event.pos[1] > 730 + settings.get_height())):
+            settings = font.render('Настройки', True, (255, 255, 255))
+        if ((event.pos[0] < ((width // 2) - (exit.get_width() // 2)) or
+            event.pos[0] > ((width // 2) - (exit.get_width() // 2)) + exit.get_width()) or
+                (event.pos[1] < 780 or event.pos[1] > 780 + exit.get_height())):
             exit = font.render('Выйти из игры', True, (255, 255, 255))
 
 
@@ -200,10 +222,10 @@ def blit_new_game(flag_rect1, flag_rect2, screen):
     screen.blit(text_complexity_normal, (456, 670))
     screen.blit(text_complexity_hard, (456, 720))
     screen.blit(text_error, (0, 900 - text_error.get_height()))
-    screen.blit(enter, (1343, 0))
-    screen.blit(esc, (220, 0))
-    screen.blit(text_next, (1430, 75 // 2 - text_next.get_height() // 2))
-    screen.blit(text_back, (0, 75 // 2 - text_back.get_height() // 2))
+    screen.blit(enter, (1343, 5))
+    screen.blit(esc, (220, 5))
+    screen.blit(text_next, (1430, 75 // 2 - text_next.get_height() // 2 + 5))
+    screen.blit(text_back, (0, 75 // 2 - text_back.get_height() // 2 + 5))
     if (flag_rect1 or flag_change_rect1) and flag_change_rect2 is False:
         rect_1 = pygame.draw.rect(screen, (255, 255, 0), (451, 185, 270, 270), 5)
     else:
@@ -261,8 +283,8 @@ def down_new_game(event):
 
 
 def blit_settings():
-    screen.blit(text_back, (0, 75 // 2 - text_back.get_height() // 2))
-    screen.blit(esc, (220, 0))
+    screen.blit(text_back, (0, 75 // 2 - text_back.get_height() // 2 + 5))
+    screen.blit(esc, (220, 5))
     screen.blit(text_sounds, (width // 2 - text_sounds.get_width() // 2, 20))
     line_sounds_main_menu = pygame.draw.line(screen, (255, 255, 255), (width // 2 - 200, 120),
                                              (width // 2 + 200, 120), 5)
@@ -403,6 +425,17 @@ def motion_settings(event):
         flag_rect_effects = False
 
 
+def blit_how_to_play():
+    screen.blit(text_back, (0, 75 // 2 - text_back.get_height() // 2 + 5))
+    screen.blit(esc, (220, 5))
+    screen.blit(text_management, (width // 2 - text_management.get_width() // 2, 20))
+    screen.blit(text_wasd, (width // 2 - text_movement.get_width() // 2 - text_wasd.get_width() // 2, 80))
+    screen.blit(text_movement, (width // 2 - text_movement.get_width() // 2 + text_wasd.get_width() // 2 + 20, 85))
+    screen.blit(text_f, (width // 2 - text_movement.get_width() // 2 - text_wasd.get_width() // 2, 130))
+    screen.blit(text_hit, (width // 2 - text_movement.get_width() // 2 -
+                                text_wasd.get_width() // 2 + text_f.get_width() + 10, 135))
+
+
 class Knight(pygame.sprite.Sprite):
     def __init__(self):
         global rect_1, rect_2
@@ -481,6 +514,7 @@ flag_new_game = False
 flag_play = False
 flag_settings = False
 flag_main = True
+flag_how_to_play = False
 flag_rect1 = False
 flag_rect2 = False
 flag_change_rect1 = False
@@ -511,15 +545,13 @@ while running:
             if event.type == pygame.MOUSEMOTION:
                 motion_main(result[0])
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if ((event.pos[0] >= ((width // 2) - (exit.get_width() // 2)) and
+                if (((event.pos[0] >= ((width // 2) - (exit.get_width() // 2)) and
                         event.pos[0] <= ((width // 2) - (exit.get_width() // 2)) + exit.get_width()) and
-                        (event.pos[1] >= 670 and event.pos[1] <= 670 + exit.get_height())) and result[0] == 0:
+                        (event.pos[1] >= 730 and event.pos[1] <= 730 + exit.get_height()) and result[0] == 0) or
+                        ((event.pos[0] >= ((width // 2) - (exit.get_width() // 2)) and
+                          event.pos[0] <= ((width // 2) - (exit.get_width() // 2)) + exit.get_width()) and
+                         (event.pos[1] >= 780 and event.pos[1] <= 780 + exit.get_height()) and result[0] != 0)):
                     running = False
-                else:
-                    if ((event.pos[0] >= ((width // 2) - (exit.get_width() // 2)) and
-                         event.pos[0] <= ((width // 2) - (exit.get_width() // 2)) + exit.get_width()) and
-                            (event.pos[1] >= 730 and event.pos[1] <= 730 + exit.get_height())):
-                        running = False
                 if ((event.pos[0] >= ((width // 2) - (new_game.get_width() // 2)) and
                     event.pos[0] <= ((width // 2) - (new_game.get_width() // 2)) + new_game.get_width()) and
                         (event.pos[1] >= 550 and event.pos[1] <= 550 + new_game.get_height())):
@@ -552,9 +584,12 @@ while running:
                     knight = Knight()
                     wizard = Wizard()
 
-                if ((((event.pos[0] >= ((width // 2) - (settings.get_width() // 2)) and
-                    event.pos[0] <= ((width // 2) - (settings.get_width() // 2)) + settings.get_width()) and
-                      (event.pos[1] >= 610 and event.pos[1] <= 610 + settings.get_height())) and result[0] == 0)):
+                if (((event.pos[0] >= ((width // 2) - (settings.get_width() // 2))) and
+                     (event.pos[0] <= ((width // 2) - (settings.get_width() // 2)) + settings.get_width()) and
+                      (event.pos[1] >= 670 and event.pos[1] <= 670 + settings.get_height()) and result[0] == 0) or
+                        ((event.pos[0] >= ((width // 2) - (settings.get_width() // 2))) and
+                         (event.pos[0] <= ((width // 2) - (settings.get_width() // 2)) + settings.get_width()) and
+                          (event.pos[1] >= 730 and event.pos[1] <= 730 + settings.get_height()) and result[0] != 0)):
                     flag_main = False
                     flag_settings = True
                     esc = pygame.transform.scale(load_image('esc_white.png'), (75, 75))
@@ -601,6 +636,22 @@ while running:
                     img_cursor_sword = pygame.transform.scale(load_image('sword.gif'), (60, 60))
                     img_cursor_stick = pygame.transform.scale(load_image('stick.png'), (49, 60))
 
+                if (((event.pos[0] >= ((width // 2) - (how_to_play.get_width() // 2))) and
+                     (event.pos[0] <= ((width // 2) - (how_to_play.get_width() // 2)) + how_to_play.get_width()) and
+                        (event.pos[1] >= 610 and event.pos[1] <= 610 + how_to_play.get_height()) and result[0] == 0) or
+                        ((event.pos[0] >= ((width // 2) - (how_to_play.get_width() // 2))) and
+                         (event.pos[0] <= ((width // 2) - (how_to_play.get_width() // 2)) + how_to_play.get_width()) and
+                         (event.pos[1] >= 670 and event.pos[1] <= 670 + how_to_play.get_height()) and result[0] != 0)):
+                    flag_main = False
+                    flag_how_to_play = True
+                    esc = pygame.transform.scale(load_image('esc_white.png'), (75, 75))
+                    text_back = font_smaller.render('Вернуться назад -', True, (255, 255, 255))
+                    text_management = font.render('Управление', True, (255, 255, 255))
+                    text_movement = font_small.render('- Передвижение персонажа', True, (255, 255, 255))
+                    text_hit = font_small.render('- Обычная атака', True, (255, 255, 255))
+                    text_wasd = font.render('W, A, S, D', True, (255, 255, 255))
+                    text_f = font.render('F', True, (255, 255, 255))
+
         if flag_new_game:
             if event.type == pygame.MOUSEMOTION:
                 motion_new_game(event)
@@ -636,6 +687,12 @@ while running:
                     flag_main = True
                     flag_settings = False
 
+        if flag_how_to_play:
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    flag_main = True
+                    flag_how_to_play = False
+
         if event.type == pygame.MOUSEMOTION:
             x_cursor = event.pos[0]
             y_cursor = event.pos[1]
@@ -658,6 +715,9 @@ while running:
 
     if flag_new_game:
         blit_new_game(flag_rect1, flag_rect2, screen)
+
+    if flag_how_to_play:
+        blit_how_to_play()
 
     if flag_settings:
         blit_settings()
