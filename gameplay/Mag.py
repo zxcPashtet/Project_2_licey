@@ -1,14 +1,11 @@
-import pygame
-
-
-class Player(pygame.sprite.Sprite):
+class Mag(pygame.sprite.Sprite):
     def __init__(self, x, y, max_hp, damage, defense, regen):
         pygame.sprite.Sprite.__init__(self, player_sprites)
         self.animation_list = []
         self.animation_list.append([load_image(f"walk/walk{i}.png") for i in range(1, 9)])
         self.animation_list.append([load_image(f"attack/attack{i}.png") for i in range(1, 6)])
         self.animation_list.append([load_image(f"idle/idle{i}.png") for i in range(1, 5)])
-        #       self.animation_list.append([load_image(f"death/death{i}.png") for i in range(1, 5)])
+        self.animation_list.append([load_image(f"death/Dead{i}.png") for i in range(1, 7)])
         self.frame_index, self.attack_cur, self.move_cur, self.idle_cur, self.death_cur = 2, 0, 0, 0, 0
         self.update_time = pygame.time.get_ticks()
         self.image = self.animation_list[2][self.attack_cur]
@@ -103,11 +100,11 @@ class Player(pygame.sprite.Sprite):
             pygame.draw.rect(screen, 'green', (self.rect.x + 50, self.rect.y, int((self.hp / self.max_hp) * 20), 3))
 
     def dead(self):
-        attack_cooldown = 125
+        death_cooldown = 125
         if self.death_flag:
             self.image = self.animation_list[3][self.death_cur]
-            if pygame.time.get_ticks() - self.update_time > attack_cooldown and self.death_cur != 3:
+            if pygame.time.get_ticks() - self.update_time > death_cooldown and self.death_cur != 5:
                 self.update_time = pygame.time.get_ticks()
-                self.death_cur = (self.death_cur + 1)
-            if self.death_cur == 3:
-                self.death_cur = 3
+                self.death_cur = self.death_cur + 1
+            if self.death_cur == 5:
+                self.death_cur = 5
