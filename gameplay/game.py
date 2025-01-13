@@ -141,13 +141,18 @@ class Knight(pygame.sprite.Sprite):
 
 
 class Mag(pygame.sprite.Sprite):
-    def __init__(self, x, y, max_hp, damage, defense, regen):
+    def __init__(self, x, y, max_hp, damage, defense, max_mana):
         pygame.sprite.Sprite.__init__(self, player_sprites)
         self.animation_list = []
-        self.animation_list.append([load_image(f"mag_walk/mag_walk{i}.png") for i in range(1, 8)])
-        self.animation_list.append([load_image(f"mag_attack1/mag_attack1{i}.png") for i in range(1, 8)])
-        self.animation_list.append([load_image(f"mag_idle/mag_idle{i}.png") for i in range(1, 9)])
-        self.animation_list.append([load_image(f"mag_death/mag_dead{i}.png") for i in range(1, 5)])
+        self.animation_list.append([load_image(f"mag_walk/{i}.png") for i in range(1, 8)])
+        self.animation_list.append([load_image(f"mag_attack1/{i}.png") for i in range(1, 10)])
+        self.animation_list.append([load_image(f"mag_idle/{i}.png") for i in range(1, 9)])
+        self.animation_list.append([load_image(f"mag_death/{i}.png") for i in range(1, 5)])
+        self.animation_list.append([load_image(f"mag_attack2/{i}.png") for i in range(1, 17)])
+        self.bullets = []
+        self.animation_bullet = []
+        self.animation_bullet.append([load_image(f"charge1/{i}.png") for i in range(1, 7)])
+        self.animation_bullet.append([load_image(f"charge2/{i}.png") for i in range(1, 10)])
         self.frame_index, self.attack_cur, self.move_cur, self.idle_cur, self.death_cur = 2, 0, 0, 0, 0
         self.update_time = pygame.time.get_ticks()
         self.image = self.animation_list[2][self.attack_cur]
@@ -155,18 +160,30 @@ class Mag(pygame.sprite.Sprite):
         self.rect.center = x, y
         self.flag, self.move_play, self.death_flag = False, False, False
         self.flag_attack = 0
-        self.damage, self.hp, self.defense, self.max_hp = damage, max_hp, defense, max_hp
+        self.damage, self.hp, self.defense, self.max_hp, self.mana, self.max_mana = damage, max_hp, defense, max_hp, max_mana, max_mana
 
     def attack(self, event):
         if event.key == pygame.K_f:
+            self.bullets.append(self.animation_bullet[0][0].get_rect(topleft=(self.rect.x + 50, self.rect.y)))
             self.attack_cur = 0
             self.flag_attack = 1
+        elif event.key == pygame.K_r and self.mana - 10 >= 0:
+            self.bullets.append(self.animation_bullet[1][0].get_rect(topleft=(self.rect.x + 50, self.rect.y)))
+            self.mana -= 10
+            self.attack_cur = 0
+            self.flag_attack = 4
+        if self.bullets:
+            for el in self.bullets:
+                print(el.x)
+                screen.blit(self.animation_bullet[0][0], (el.x, el.y))
+                el.x += 4
+            self.bullets = []
 
     def action_attack(self):
         if not self.death_flag:
-            attack_cooldown = 125
-            if self.flag_attack == 1:
-                self.image = self.animation_list[1][self.attack_cur]
+            if self.flag_attack == 1 or self.flag_attack == 4:
+                attack_cooldown = 150
+                self.image = self.animation_list[self.flag_attack][self.attack_cur]
                 if pygame.time.get_ticks() - self.update_time > attack_cooldown:
                     self.update_time = pygame.time.get_ticks()
                     for i in mob_sprites:
@@ -181,7 +198,7 @@ class Mag(pygame.sprite.Sprite):
                     self.rotate()
                 if not self.flag:
                     self.mask = pygame.mask.from_surface(self.image)
-                if self.attack_cur == 5:
+                if self.attack_cur == len(self.animation_list[self.flag_attack]) - 1:
                     self.flag_attack = 0
                     self.attack_cur = 0
             elif not self.move_play:
@@ -238,8 +255,11 @@ class Mag(pygame.sprite.Sprite):
         if self.hp == 0:
             self.death_flag = True
         if not self.death_flag:
+            pygame.draw.rect(screen, 'red', (self.rect.x + 50, self.rect.y - 5, 20, 3))
+            pygame.draw.rect(screen, 'green', (self.rect.x + 50, self.rect.y - 5, int((self.hp / self.max_hp) * 20), 3))
+        if not self.death_flag:
             pygame.draw.rect(screen, 'red', (self.rect.x + 50, self.rect.y, 20, 3))
-            pygame.draw.rect(screen, 'green', (self.rect.x + 50, self.rect.y, int((self.hp / self.max_hp) * 20), 3))
+            pygame.draw.rect(screen, '#42aaff', (self.rect.x + 50, self.rect.y, int((self.mana / self.max_mana) * 20), 3))
 
     def dead(self):
         death_cooldown = 125
@@ -377,7 +397,7 @@ screen = pygame.display.set_mode(size)
 if player_class == 0:
     player = Knight(PLAYER_X, PLAYER_Y, MAX_HP_PLAYER, PLAYER_DAMAGE, PLAYER_DEFENSE, PLAYER_REGEN)
 else:
-    player = Mag(PLAYER_X, PLAYER_Y, MAX_HP_PLAYER, PLAYER_DAMAGE, PLAYER_DEFENSE, PLAYER_REGEN)
+    player = Mag(PLAYER_X, PLAYER_Y, MAX_HP_PLAYER, PLAYER_DAMAGE, PLAYER_DEFENSE, 200)
 for _ in range(1):
     mob = Mob(random.randrange(1, 500), random.randrange(1, 500), MAX_HP_MOB, MOB_DAMAGE, MOB_DEFENSE)
 running = True
