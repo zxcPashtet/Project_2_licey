@@ -12,10 +12,11 @@ player_sprites = pygame.sprite.Group()
 mob_sprites = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
+tiles_collide_group = pygame.sprite.Group()
 SPEED_SKELETON = 10
 SPEED_PLAYER = 50
 FPS = 10
-PLAYER_X, PLAYER_Y, MAX_HP_PLAYER, PLAYER_DAMAGE, PLAYER_DEFENSE, PLAYER_REGEN = 250, 250, 100, 15, 5, 3
+PLAYER_X, PLAYER_Y, MAX_HP_PLAYER, PLAYER_DAMAGE, PLAYER_DEFENSE, PLAYER_POTIONS_HP, PLAYER_POTIONS_MANA = 250, 250, 100, 15, 5, 3, 5
 MAX_HP_MOB, MOB_DAMAGE, MOB_DEFENSE = 100, 20, 3
 
 
@@ -57,6 +58,14 @@ class Tile(pygame.sprite.Sprite):
             tile_width * pos_x, tile_height * pos_y)
 
 
+class Tile_collide(pygame.sprite.Sprite):
+    def __init__(self, tile_type, pos_x, pos_y):
+        super().__init__(tiles_collide_group, all_sprites)
+        self.image = tile_images[tile_type]
+        self.rect = self.image.get_rect().move(
+            tile_width * pos_x, tile_height * pos_y)
+
+
 def generate_level(level):
     new_player, x, y = None, None, None
     for y in range(len(level)):
@@ -64,13 +73,13 @@ def generate_level(level):
             if level[y][x] == '.':
                 Tile('empty', x, y)
             elif level[y][x] == '#':
-                Tile('wall', x, y)
+                Tile_collide('wall', x, y)
             elif level[y][x] == "@":
                 Tile('empty', x, y)
                 if player_class == 0:
-                    new_player = Knight(x, y, MAX_HP_PLAYER, PLAYER_DAMAGE, PLAYER_DEFENSE, PLAYER_REGEN)
+                    new_player = Knight(x, y, MAX_HP_PLAYER, PLAYER_DAMAGE, PLAYER_DEFENSE, PLAYER_POTIONS_HP)
                 else:
-                    new_player = Mag(x, y, MAX_HP_PLAYER, PLAYER_DAMAGE, PLAYER_DEFENSE, 200)
+                    new_player = Mag(x, y, MAX_HP_PLAYER, PLAYER_DAMAGE, PLAYER_DEFENSE, PLAYER_POTIONS_HP, PLAYER_POTIONS_MANA, 200)
             elif level[y][x] == "$":
                 Tile('empty', x, y)
                 mob = Mob(x, y, MAX_HP_MOB, MOB_DAMAGE, MOB_DEFENSE)
@@ -78,7 +87,7 @@ def generate_level(level):
 
 
 class Knight(pygame.sprite.Sprite):
-    def __init__(self, x, y, max_hp, damage, defense, potions):
+    def __init__(self, x, y, max_hp, damage, defense, potions_hp):
         super().__init__(player_sprites, all_sprites)
         self.animation_list = []
         self.animation_list.append([pygame.transform.scale(load_image(f"walk/walk{i}.png"), (200, 130)) for i in range(1, 9)])
@@ -91,6 +100,7 @@ class Knight(pygame.sprite.Sprite):
         self.rect = self.image.get_rect().move(13 + x * tile_width, 5 + y * tile_height)
         self.flag, self.move_play, self.death_flag = False, False, False
         self.flag_attack = 0
+        self.potions_hp = potions_hp
         self.damage, self.hp, self.defense, self.max_hp = damage, max_hp, defense, max_hp
 
     def attack(self, event):
@@ -105,8 +115,8 @@ class Knight(pygame.sprite.Sprite):
                 self.image = self.animation_list[1][self.attack_cur]
                 if pygame.time.get_ticks() - self.update_time > attack_cooldown:
                     self.update_time = pygame.time.get_ticks()
-                    for i in mob_sprites:
-                        if self.attack_cur == len(self.animation_list[self.flag_attack]) - 1:
+                    if self.attack_cur == len(self.animation_list[self.flag_attack]) - 1:
+                        for i in mob_sprites:
                             if pygame.sprite.collide_mask(self, i):
                                 i.hp = i.hp - (self.damage - i.defense)
                                 if i.hp <= 0:
@@ -136,24 +146,24 @@ class Knight(pygame.sprite.Sprite):
     def move(self):
         if not self.death_flag:
             keys = pygame.key.get_pressed()
-            if keys[pygame.K_a]:
+            if keys[pygame.K_a] and not pygame.sprite.spritecollideany(self, tiles_collide_group):
                 self.move_play = True
                 self.m()
                 self.flag = True
                 self.rotate()
                 self.rect.x -= SPEED_PLAYER
-            elif keys[pygame.K_d]:
+            elif keys[pygame.K_d] and not pygame.sprite.spritecollideany(self, tiles_collide_group):
                 self.move_play = True
                 self.m()
                 self.flag = False
                 self.rect.x += SPEED_PLAYER
-            elif keys[pygame.K_w]:
+            elif keys[pygame.K_w] and not pygame.sprite.spritecollideany(self, tiles_collide_group):
                 self.move_play = True
                 self.m()
                 if self.flag:
                     self.rotate()
                 self.rect.y -= SPEED_PLAYER
-            elif keys[pygame.K_s]:
+            elif keys[pygame.K_s] and not pygame.sprite.spritecollideany(self, tiles_collide_group):
                 self.move_play = True
                 self.m()
                 if self.flag:
@@ -170,12 +180,23 @@ class Knight(pygame.sprite.Sprite):
         self.image = pygame.transform.flip(self.image, True, False)
         self.mask = pygame.mask.from_surface(self.image)
 
+    def use_health(self, event):
+        if event.key == pygame.K_z and self.potions_hp > 0:
+            self.potions_hp -= 1
+            self.hp = self.hp + 30
+            if self.hp > self.max_hp:
+                self.hp = self.max_hp
+
     def health(self):
         if self.hp == 0:
             self.death_flag = True
-        if not self.death_flag:
-            pygame.draw.rect(screen, 'red', (10, 10, 200, 20))
-            pygame.draw.rect(screen, 'green', (10, 10, int((self.hp / self.max_hp) * 200), 20))
+        pygame.draw.rect(screen, 'red', (10, 10, 200, 20))
+        pygame.draw.rect(screen, 'green', (10, 10, int((self.hp / self.max_hp) * 200), 20))
+        hp_bottle = pygame.transform.scale(load_image('hp.png'), (50, 50))
+        screen.blit(hp_bottle, (0, 60))
+        font = pygame.font.Font(None, 30)
+        text = font.render(f"{self.potions_hp}", True, (255, 255, 255))
+        screen.blit(text, (30, 60))
 
     def dead(self):
         death_cooldown = 125
@@ -189,7 +210,7 @@ class Knight(pygame.sprite.Sprite):
 
 
 class Mag(pygame.sprite.Sprite):
-    def __init__(self, x, y, max_hp, damage, defense, max_mana):
+    def __init__(self, x, y, max_hp, damage, defense, potions_hp, potions_mana, max_mana):
         super().__init__(player_sprites, all_sprites)
         self.animation_list = []
         self.animation_list.append([pygame.transform.scale(load_image(f"mag_walk/{i}.png"), (200, 130)) for i in range(1, 8)])
@@ -203,6 +224,7 @@ class Mag(pygame.sprite.Sprite):
         self.animation_bullet.append([load_image(f"charge2/{i}.png") for i in range(1, 10)])
         self.frame_index, self.attack_cur, self.move_cur, self.idle_cur, self.death_cur = 2, 0, 0, 0, 0
         self.update_time = pygame.time.get_ticks()
+        self.potions_hp, self.potions_mana = potions_hp, potions_mana
         self.image = self.animation_list[2][self.attack_cur]
         self.rect = self.image.get_rect().move(13 + x * tile_width, 5 + y * tile_height)
         self.flag, self.move_play, self.death_flag, self.shot = False, False, False, False
@@ -264,24 +286,24 @@ class Mag(pygame.sprite.Sprite):
     def move(self):
         if not self.death_flag:
             keys = pygame.key.get_pressed()
-            if keys[pygame.K_a]:
+            if keys[pygame.K_a] and not pygame.sprite.spritecollideany(self, tiles_collide_group):
                 self.move_play = True
                 self.m()
                 self.flag = True
                 self.rotate()
                 self.rect.x -= SPEED_PLAYER
-            elif keys[pygame.K_d]:
+            elif keys[pygame.K_d] and not pygame.sprite.spritecollideany(self, tiles_collide_group):
                 self.move_play = True
                 self.m()
                 self.flag = False
                 self.rect.x += SPEED_PLAYER
-            elif keys[pygame.K_w]:
+            elif keys[pygame.K_w] and not pygame.sprite.spritecollideany(self, tiles_collide_group):
                 self.move_play = True
                 self.m()
                 if self.flag:
                     self.rotate()
                 self.rect.y -= SPEED_PLAYER
-            elif keys[pygame.K_s]:
+            elif keys[pygame.K_s] and not pygame.sprite.spritecollideany(self, tiles_collide_group):
                 self.move_play = True
                 self.m()
                 if self.flag:
@@ -298,15 +320,35 @@ class Mag(pygame.sprite.Sprite):
         self.image = pygame.transform.flip(self.image, True, False)
         self.mask = pygame.mask.from_surface(self.image)
 
+    def use_health(self, event):
+        if event.key == pygame.K_z and self.potions_hp > 0:
+            self.potions_hp -= 1
+            self.hp = self.hp + 30
+            if self.hp > self.max_hp:
+                self.hp = self.max_hp
+        if event.key == pygame.K_x and self.potions_mana > 0:
+            self.potions_mana -= 1
+            self.mana = self.mana + 30
+            if self.mana > self.max_mana:
+                self.mana = self.max_mana
+
     def health(self):
         if self.hp == 0:
             self.death_flag = True
-        if not self.death_flag:
-            pygame.draw.rect(screen, 'red', (10, 10, 200, 20))
-            pygame.draw.rect(screen, 'green', (10, 10, int((self.hp / self.max_hp) * 200), 20))
-        if not self.death_flag:
-            pygame.draw.rect(screen, 'red', (30, 30, 200, 20))
-            pygame.draw.rect(screen, '#42aaff', (30, 30, int((self.mana / self.max_mana) * 200), 20))
+        pygame.draw.rect(screen, 'red', (10, 10, 200, 20))
+        pygame.draw.rect(screen, 'green', (10, 10, int((self.hp / self.max_hp) * 200), 20))
+        pygame.draw.rect(screen, 'red', (30, 30, 200, 20))
+        pygame.draw.rect(screen, '#42aaff', (30, 30, int((self.mana / self.max_mana) * 200), 20))
+        hp_bottle = pygame.transform.scale(load_image('hp.png'), (50, 50))
+        screen.blit(hp_bottle, (0, 60))
+        mana_bottle = pygame.transform.scale(load_image('mana.png'), (50, 50))
+        screen.blit(mana_bottle, (0, 110))
+        font = pygame.font.Font(None, 30)
+        text = font.render(f"{self.potions_hp}", True, (255, 255, 255))
+        screen.blit(text, (30, 60))
+        font = pygame.font.Font(None, 30)
+        text = font.render(f"{self.potions_mana}", True, (255, 255, 255))
+        screen.blit(text, (30, 110))
 
     def dead(self):
         death_cooldown = 125
@@ -447,6 +489,8 @@ while running:
             running = False
         if event.type == pygame.KEYDOWN:
             player.attack(event)
+        if event.type == pygame.KEYDOWN:
+            player.use_health(event)
     screen.fill((0, 0, 0))
     camera.update(player)
     for sprite in all_sprites:
