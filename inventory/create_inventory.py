@@ -36,6 +36,7 @@ def load_font(name):
 
 font = pygame.font.Font(load_font('Courier WGL4 Italic.otf'), 35)
 font_small = pygame.font.Font(load_font('Courier WGL4 Italic.otf'), 25)
+font_smaller = pygame.font.Font(load_font('Courier WGL4 Italic.otf'), 20)
 
 
 class Inventory:
@@ -44,15 +45,15 @@ class Inventory:
         self.con = sqlite3.connect('forproject2.bd')
         self.cursor = self.con.cursor()
         tab_inventory = [None for i in range(5) for i in range(4)]
-        result = self.cursor.execute("""SELECT inventory FROM Data""").fetchone()[0].split(', ')
+        result = self.cursor.execute("""SELECT inventory FROM Data""").fetchone()[0].split()
         for i in range(len(result)):
             tab_inventory[i] = result[i]
-        tab_inventory[len(result) - 1] = tab_inventory[len(result) - 1][:-1]
         tab_equipment = [None for i in range(5)]
-        result = self.cursor.execute("""SELECT equipment FROM Data""").fetchone()[0].split(', ')
+        result = self.cursor.execute("""SELECT equipment FROM Data""").fetchone()[0].split()
         for i in range(len(result)):
             tab_equipment[i] = result[i]
         self.click = False
+        self.image_showing_characteristics = None
         self.width = width
         self.height = height
         self.board = [[0] * width for i in range(height)]
@@ -66,12 +67,13 @@ class Inventory:
         self.left, self.top, self.cell_size = left, top, cell_size
 
     def render(self, screen):
+        global gold
         pygame.draw.rect(screen, (50, 50, 50), (1080, 0, 520, 900))
         text_inventory = font.render('Инвентарь', True, (255, 255, 255))
         text_equipment = font_small.render('Ваше снаряжение', True, (255, 255, 255))
         image_gold = pygame.transform.scale(load_image('gold.png'), (25, 25))
-        result = self.cursor.execute("""SELECT money FROM Data""").fetchone()
-        text_money = font_small.render(result[0], True, (255, 255, 0))
+        gold = self.cursor.execute("""SELECT money FROM Data""").fetchone()
+        text_money = font_small.render(gold[0], True, (255, 255, 0))
         for x in range(self.width):
             for y in range(self.height):
                 pygame.draw.rect(screen, self.color[self.board[y][x]],
@@ -87,13 +89,57 @@ class Inventory:
         screen.blit(text_money, (1145, 560))
         screen.blit(text_equipment, (1335 - text_equipment.get_width() // 2, 375))
         self.items()
+        if self.image_showing_characteristics != 'None':
+            k = -1
+            screen.blit(load_image(self.image_showing_characteristics), (1110, 150))
+            selling_price = self.cursor.execute(f"""SELECT cost FROM Items WHERE item = '{self.image_showing_characteristics}'""").fetchone()
+            dexterity = self.cursor.execute(f"""SELECT dexterity FROM Items WHERE item = '{self.image_showing_characteristics}'""").fetchone()
+            armor = self.cursor.execute(f"""SELECT armor FROM Items WHERE item = '{self.image_showing_characteristics}'""").fetchone()
+            health = self.cursor.execute(f"""SELECT health FROM Items WHERE item = '{self.image_showing_characteristics}'""").fetchone()
+            mane = self.cursor.execute(f"""SELECT mana FROM Items WHERE item = '{self.image_showing_characteristics}'""").fetchone()
+            physical_damage = self.cursor.execute(f"""SELECT physical_damage FROM Items WHERE item = '{self.image_showing_characteristics}'""").fetchone()
+            magic_damage = self.cursor.execute(f"""SELECT magic_damage FROM Items WHERE item = '{self.image_showing_characteristics}'""").fetchone()
+            speed = self.cursor.execute(f"""SELECT speed FROM Items WHERE item = '{self.image_showing_characteristics}'""").fetchone()
+            name = ' '.join(self.image_showing_characteristics[:-9].split('_'))
+            text_name = font_small.render(name, True, (255, 255, 255))
+            text_selling_price = font_smaller.render('Цена при продаже ' + str(selling_price[0] // 2), True, (255, 255, 0))
+            screen.blit(text_name, (1110, 110))
+            if dexterity[0] is not None:
+                k += 1
+                text_dexterity = font_smaller.render('Ловкость +' + str(dexterity[0]), True, (255, 255, 255))
+                screen.blit(text_dexterity, (1220, 150 + 20 * k))
+            if armor[0] is not None:
+                k += 1
+                text_armor = font_smaller.render('Защита +' + str(armor[0]), True, (255, 255, 255))
+                screen.blit(text_armor, (1220, 150 + 20 * k))
+            if health[0] is not None:
+                k += 1
+                text_health = font_smaller.render('Здоровье +' + str(health[0]), True, (255, 255, 255))
+                screen.blit(text_health, (1220, 150 + 20 * k))
+            if mane[0] is not None:
+                k += 1
+                text_mane = font_smaller.render('Запас маны +' + str(mane[0]), True, (255, 255, 255))
+                screen.blit(text_mane, (1220, 150 + 20 * k))
+            if physical_damage[0] is not None:
+                k += 1
+                text_physical_damage = font_smaller.render('Физический урон +' + str(physical_damage[0]), True, (255, 255, 255))
+                screen.blit(text_physical_damage, (1220, 150 + 20 * k))
+            if magic_damage[0] is not None:
+                k += 1
+                text_magic_damage = font_smaller.render('Магический урон +' + str(magic_damage[0]), True, (255, 255, 255))
+                screen.blit(text_magic_damage, (1220, 150 + 20 * k))
+            if speed[0] is not None:
+                k += 1
+                text_speed = font_smaller.render('Скорость +' + str(speed[0]), True, (255, 255, 255))
+                screen.blit(text_speed, (1220, 150 + 30 * k))
+            screen.blit(text_selling_price, (1220, 150 + (20 * (k + 1))))
+
 
     def items(self):
         for i in range(0, len(tab_inventory)):
-            if tab_inventory[i] is not None:
-                image = load_image(tab_inventory[i] + '.png')
+            if tab_inventory[i] != 'None':
+                image = load_image(str(tab_inventory[i]) + '.png')
                 screen.blit(image, (1112 + ((i % 5) * 92), 592 + ((i // 5) * 68)))
-
 
     def clicking_cell(self, mouse_pos):
         x = (mouse_pos[0] - 1110) // 92
@@ -106,16 +152,18 @@ class Inventory:
         if event.type == pygame.MOUSEBUTTONDOWN:
             self.cell = self.clicking_cell(event.pos)
             self.position = (self.cell[0] + (5 * self.cell[1] + 1)) - 1
-            if tab_inventory[self.position] is not None and self.cell[0] >= 0 and self.cell[1] >= 0:
+            if self.cell[0] >= 0 and self.cell[1] >= 0 and self.cell[0] <= 4 and self.cell[1] <= 3:
                 self.click = True
                 self.portable = tab_inventory[self.position]
-                tab_inventory[self.position] = None
-        if event.type == pygame.MOUSEBUTTONUP and self.click:
+                tab_inventory[self.position] = 'None'
+                if self.portable != 'None':
+                    self.image_showing_characteristics = str(self.portable) + '.png'
+        if event.type == pygame.MOUSEBUTTONUP and self.click and self.portable != 'None':
             self.cell = self.clicking_cell(event.pos)
             self.click = False
-            if (event.pos[0] < 1100 or event.pos[0] > 1560) or (event.pos[1] > 468 or event.pos[1] < 400):
-                if (event.pos[0] > 1100 and event.pos[0] < 1560) and (event.pos[1] > 590 and event.pos[1] < 862):
-                    if tab_inventory[(self.cell[0] + (5 * self.cell[1] + 1)) - 1] is None:
+            if (event.pos[0] < 1110 or event.pos[0] > 1560) or (event.pos[1] > 468 or event.pos[1] < 400):
+                if (event.pos[0] > 1110 and event.pos[0] < 1560) and (event.pos[1] > 590 and event.pos[1] < 862):
+                    if tab_inventory[(self.cell[0] + (5 * self.cell[1] + 1)) - 1] == 'None':
                         tab_inventory[(self.cell[0] + (5 * self.cell[1] + 1)) - 1] = self.portable
                     else:
                         temp = tab_inventory[(self.cell[0] + (5 * self.cell[1] + 1)) - 1]
@@ -123,9 +171,9 @@ class Inventory:
                         tab_inventory[self.position] = temp
                 else:
                     tab_inventory[self.position] = self.portable
-            if (event.pos[0] > 1100 and event.pos[0] < 1560) and (event.pos[1] > 400 and event.pos[1] < 468):
+            if (event.pos[0] > 1110 and event.pos[0] < 1560) and (event.pos[1] > 400 and event.pos[1] < 468):
                 self.cell = board_equ.clicking_cell(event.pos)
-                if tab_equipment[self.cell[0]] is None:
+                if tab_equipment[self.cell[0]] == 'None':
                     tab_equipment[self.cell[0]] = self.portable
                 else:
                     temp = tab_equipment[self.cell[0]]
@@ -135,9 +183,24 @@ class Inventory:
 
 
     def get_motion(self, x, y):
-        if self.click and self.portable is not None:
+        if self.click and self.portable != 'None':
             image = load_image(self.portable + '.png')
             screen.blit(image, (x - self.cell[2], y - self.cell[3]))
+
+    def showing_characteristics(self, event):
+        cell = self.clicking_cell(event.pos)
+        if self.click is False:
+            if cell[0] >= 0 and cell[1] >= 0 and cell[0] <= 4 and cell[1] <= 3:
+                if tab_inventory[(cell[0] + (5 * cell[1] + 1)) - 1] != 'None':
+                    self.image_showing_characteristics = str(tab_inventory[(cell[0] + (5 * cell[1] + 1)) - 1]) + '.png'
+                else:
+                    self.image_showing_characteristics = 'None'
+            else:
+                self.image_showing_characteristics = 'None'
+
+    def completion(self):
+        self.cursor.close()
+        self.con.close()
 
 
 class Equipment:
@@ -146,6 +209,7 @@ class Equipment:
         self.con = sqlite3.connect('forproject2.bd')
         self.cursor = self.con.cursor()
         self.click = False
+        self.image_showing_characteristics = None
         self.width = width
         self.height = height
         self.board = [[0] * width for i in range(height)]
@@ -170,13 +234,56 @@ class Equipment:
                                   self.top + y * self.cell_size_y,
                                  self.cell_size_x, self.cell_size_y), 1)
         self.items()
+        if self.image_showing_characteristics != 'None':
+            k = -1
+            screen.blit(load_image(self.image_showing_characteristics), (1110, 150))
+            selling_price = self.cursor.execute(f"""SELECT cost FROM Items WHERE item = '{self.image_showing_characteristics}'""").fetchone()
+            dexterity = self.cursor.execute(f"""SELECT dexterity FROM Items WHERE item = '{self.image_showing_characteristics}'""").fetchone()
+            armor = self.cursor.execute(f"""SELECT armor FROM Items WHERE item = '{self.image_showing_characteristics}'""").fetchone()
+            health = self.cursor.execute(f"""SELECT health FROM Items WHERE item = '{self.image_showing_characteristics}'""").fetchone()
+            mane = self.cursor.execute(f"""SELECT mana FROM Items WHERE item = '{self.image_showing_characteristics}'""").fetchone()
+            physical_damage = self.cursor.execute(f"""SELECT physical_damage FROM Items WHERE item = '{self.image_showing_characteristics}'""").fetchone()
+            magic_damage = self.cursor.execute(f"""SELECT magic_damage FROM Items WHERE item = '{self.image_showing_characteristics}'""").fetchone()
+            speed = self.cursor.execute(f"""SELECT speed FROM Items WHERE item = '{self.image_showing_characteristics}'""").fetchone()
+            name = ' '.join(self.image_showing_characteristics[:-9].split('_'))
+            text_name = font_small.render(name, True, (255, 255, 255))
+            text_selling_price = font_smaller.render('Цена при продаже ' + str(selling_price[0] // 2), True, (255, 255, 0))
+            screen.blit(text_name, (1110, 110))
+            if dexterity[0] is not None:
+                k += 1
+                text_dexterity = font_smaller.render('Ловкость +' + str(dexterity[0]), True, (255, 255, 255))
+                screen.blit(text_dexterity, (1220, 150 + 20 * k))
+            if armor[0] is not None:
+                k += 1
+                text_armor = font_smaller.render('Защита +' + str(armor[0]), True, (255, 255, 255))
+                screen.blit(text_armor, (1220, 150 + 20 * k))
+            if health[0] is not None:
+                k += 1
+                text_health = font_smaller.render('Здоровье +' + str(health[0]), True, (255, 255, 255))
+                screen.blit(text_health, (1220, 150 + 20 * k))
+            if mane[0] is not None:
+                k += 1
+                text_mane = font_smaller.render('Запас маны +' + str(mane[0]), True, (255, 255, 255))
+                screen.blit(text_mane, (1220, 150 + 20 * k))
+            if physical_damage[0] is not None:
+                k += 1
+                text_physical_damage = font_smaller.render('Физический урон +' + str(physical_damage[0]), True, (255, 255, 255))
+                screen.blit(text_physical_damage, (1220, 150 + 20 * k))
+            if magic_damage[0] is not None:
+                k += 1
+                text_magic_damage = font_smaller.render('Магический урон +' + str(magic_damage[0]), True, (255, 255, 255))
+                screen.blit(text_magic_damage, (1220, 150 + 20 * k))
+            if speed[0] is not None:
+                k += 1
+                text_speed = font_smaller.render('Скорость +' + str(speed[0]), True, (255, 255, 255))
+                screen.blit(text_speed, (1220, 150 + 30 * k))
+            screen.blit(text_selling_price, (1220, 150 + (20 * (k + 1))))
 
     def items(self):
         for i in range(0, len(tab_equipment)):
-            if tab_equipment[i] is not None:
-                image = load_image(tab_equipment[i] + '.png')
+            if tab_equipment[i] != 'None':
+                image = load_image(str(tab_equipment[i]) + '.png')
                 screen.blit(image, (1112 + ((i % 5) * 92), 402))
-
 
     def clicking_cell(self, mouse_pos):
         x = (mouse_pos[0] - 1110) // 92
@@ -189,26 +296,27 @@ class Equipment:
         if event.type == pygame.MOUSEBUTTONDOWN:
             self.cell = self.clicking_cell(event.pos)
             self.position = self.cell[0]
-            if tab_equipment[self.position] is not None and self.cell[1] == 0:
+            if self.cell[1] == 0 and self.cell[0] <= 4:
                 self.click = True
-                self.portable = tab_equipment[self.cell[0]]
-                tab_equipment[self.position] = None
-        if event.type == pygame.MOUSEBUTTONUP and self.click:
+                self.portable = tab_equipment[self.position]
+                tab_equipment[self.position] = 'None'
+                if self.portable != 'None':
+                    self.image_showing_characteristics = str(self.portable) + '.png'
+        if event.type == pygame.MOUSEBUTTONUP and self.click and self.portable != 'None':
             self.click = False
             self.cell = self.clicking_cell(event.pos)
-            if (event.pos[0] < 1100 or event.pos[0] > 1560) or (event.pos[1] > 468 or event.pos[1] < 400) and (event.pos[1] > 862 or event.pos[1] < 590):
+            if (event.pos[0] < 1110 or event.pos[0] > 1560) or (event.pos[1] > 468 or event.pos[1] < 400) and (event.pos[1] > 862 or event.pos[1] < 590):
                 tab_equipment[self.position] = self.portable
-            if (event.pos[0] > 1100 and event.pos[0] < 1560) and (event.pos[1] > 400 and event.pos[1] < 468):
-                if tab_equipment[self.cell[0]] is None:
+            if (event.pos[0] > 1110 and event.pos[0] < 1560) and (event.pos[1] > 400 and event.pos[1] < 468):
+                if tab_equipment[self.cell[0]] == 'None':
                     tab_equipment[self.cell[0]] = self.portable
                 else:
                     temp = tab_equipment[self.cell[0]]
                     tab_equipment[self.cell[0]] = self.portable
                     tab_equipment[self.position] = temp
-            if (event.pos[0] > 1100 and event.pos[0] < 1560) and (event.pos[1] > 590 and event.pos[1] < 862):
-                print(1)
+            if (event.pos[0] > 1110 and event.pos[0] < 1560) and (event.pos[1] > 590 and event.pos[1] < 862):
                 self.cell = board_inv.clicking_cell(event.pos)
-                if tab_inventory[(self.cell[0] + (5 * self.cell[1] + 1)) - 1] is None:
+                if tab_inventory[(self.cell[0] + (5 * self.cell[1] + 1)) - 1] == 'None':
                     tab_inventory[(self.cell[0] + (5 * self.cell[1] + 1)) - 1] = self.portable
                 else:
                     temp = tab_inventory[(self.cell[0] + (5 * self.cell[1] + 1)) - 1]
@@ -217,9 +325,24 @@ class Equipment:
 
 
     def get_motion(self, x, y):
-        if self.click and self.portable is not None:
+        if self.click and self.portable != 'None':
             image = load_image(self.portable + '.png')
             screen.blit(image, (x - self.cell[2], y - self.cell[3]))
+
+    def showing_characteristics(self, event):
+        cell = self.clicking_cell(event.pos)
+        if self.click is False:
+            if cell[1] == 0 and cell[0] <= 4 and cell[0] >= 0:
+                if tab_equipment[cell[0]] != 'None':
+                    self.image_showing_characteristics = str(tab_equipment[cell[0]]) + '.png'
+                else:
+                    self.image_showing_characteristics = 'None'
+            else:
+                self.image_showing_characteristics = 'None'
+
+    def completion(self):
+        self.cursor.close()
+        self.con.close()
 
 
 board_inv = Inventory(5, 4)
@@ -239,10 +362,22 @@ while running:
         if event.type == pygame.MOUSEMOTION:
             x_motion = event.pos[0]
             y_motion = event.pos[1]
+            board_inv.showing_characteristics(event)
+            board_equ.showing_characteristics(event)
     screen.fill((255, 255, 255))
     board_inv.render(screen)
     board_equ.render(screen)
     board_equ.get_motion(x_motion, y_motion)
     board_inv.get_motion(x_motion, y_motion)
     pygame.display.flip()
+board_inv.completion()
+board_equ.completion()
+sqlite_connection = sqlite3.connect('forproject2.bd')
+cursor = sqlite_connection.cursor()
+sql_update_query = f"""Update Data set inventory = '{' '.join(tab_inventory)}',
+equipment = '{' '.join(tab_equipment)}',
+money = '{gold[0]}'"""
+cursor.execute(sql_update_query)
+sqlite_connection.commit()
+cursor.close()
 pygame.quit()
