@@ -131,7 +131,7 @@ class Inventory:
             if speed[0] is not None:
                 k += 1
                 text_speed = font_smaller.render('Скорость +' + str(speed[0]), True, (255, 255, 255))
-                screen.blit(text_speed, (1220, 150 + 30 * k))
+                screen.blit(text_speed, (1220, 150 + 20 * k))
             screen.blit(text_selling_price, (1220, 150 + (20 * (k + 1))))
 
 
@@ -276,7 +276,7 @@ class Equipment:
             if speed[0] is not None:
                 k += 1
                 text_speed = font_smaller.render('Скорость +' + str(speed[0]), True, (255, 255, 255))
-                screen.blit(text_speed, (1220, 150 + 30 * k))
+                screen.blit(text_speed, (1220, 150 + 20 * k))
             screen.blit(text_selling_price, (1220, 150 + (20 * (k + 1))))
 
     def items(self):
