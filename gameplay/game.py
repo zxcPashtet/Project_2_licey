@@ -19,6 +19,9 @@ FPS = 10
 PLAYER_X, PLAYER_Y, MAX_HP_PLAYER, PLAYER_DAMAGE, PLAYER_DEFENSE, PLAYER_POTIONS_HP, PLAYER_POTIONS_MANA = 250, 250, 100, 15, 5, 3, 5
 MAX_HP_MOB, MOB_DAMAGE, MOB_DEFENSE = 100, 20, 3
 
+sound1 = pygame.mixer.Sound('data/knight_attack.mp3')
+sound2 = pygame.mixer.Sound('data/knight_move.mp3')
+
 
 def load_image(name, colorkey=None):
     fullname = os.path.join('data', name)
@@ -37,8 +40,9 @@ def load_image(name, colorkey=None):
 
 
 tile_images = {
-    'wall': pygame.transform.scale(load_image('box.jpg'), (150, 150)),
-    'empty': pygame.transform.scale(load_image('grass.png'), (150, 150))
+    'wall': pygame.transform.scale(load_image('cave_wall.png'), (150, 150)),
+    'empty': pygame.transform.scale(load_image('cave_pol.png'), (150, 150)),
+    'exit': pygame.transform.scale(load_image('cave.png'), (150, 150))
 }
 tile_width = tile_height = 150
 
@@ -74,6 +78,9 @@ def generate_level(level):
                 Tile('empty', x, y)
             elif level[y][x] == '#':
                 Tile_collide('wall', x, y)
+            elif level[y][x] == '*':
+                Tile('empty', x, y)
+                Tile('exit', x, y)
             elif level[y][x] == "@":
                 Tile('empty', x, y)
                 if player_class == 0:
@@ -123,6 +130,8 @@ class Knight(pygame.sprite.Sprite):
                                     i.death_flag = True
                                     i.hp = 0
                     self.attack_cur = (self.attack_cur + 1)
+                    if self.attack_cur == 4:
+                        sound1.play()
                 if self.flag:
                     self.rotate()
                 if not self.flag:
@@ -130,6 +139,7 @@ class Knight(pygame.sprite.Sprite):
                 if self.attack_cur == 5:
                     self.flag_attack = 0
                     self.attack_cur = 0
+                    sound1.stop()
             elif not self.move_play:
                 self.attack_cur = 0
                 self.idle()
@@ -146,24 +156,24 @@ class Knight(pygame.sprite.Sprite):
     def move(self):
         if not self.death_flag:
             keys = pygame.key.get_pressed()
-            if keys[pygame.K_a] and not pygame.sprite.spritecollideany(self, tiles_collide_group):
+            if keys[pygame.K_a]:
                 self.move_play = True
                 self.m()
                 self.flag = True
                 self.rotate()
                 self.rect.x -= SPEED_PLAYER
-            elif keys[pygame.K_d] and not pygame.sprite.spritecollideany(self, tiles_collide_group):
+            elif keys[pygame.K_d]:
                 self.move_play = True
                 self.m()
                 self.flag = False
                 self.rect.x += SPEED_PLAYER
-            elif keys[pygame.K_w] and not pygame.sprite.spritecollideany(self, tiles_collide_group):
+            elif keys[pygame.K_w]:
                 self.move_play = True
                 self.m()
                 if self.flag:
                     self.rotate()
                 self.rect.y -= SPEED_PLAYER
-            elif keys[pygame.K_s] and not pygame.sprite.spritecollideany(self, tiles_collide_group):
+            elif keys[pygame.K_s]:
                 self.move_play = True
                 self.m()
                 if self.flag:
@@ -229,6 +239,7 @@ class Mag(pygame.sprite.Sprite):
         self.rect = self.image.get_rect().move(13 + x * tile_width, 5 + y * tile_height)
         self.flag, self.move_play, self.death_flag, self.shot = False, False, False, False
         self.flag_attack = 0
+        self.hod = {'left': True, 'down': True, 'right': True, 'up': True}
         self.damage, self.hp, self.defense, self.max_hp, self.mana, self.max_mana = damage, max_hp, defense, max_hp, max_mana, max_mana
 
     def attack(self, event):
@@ -286,24 +297,24 @@ class Mag(pygame.sprite.Sprite):
     def move(self):
         if not self.death_flag:
             keys = pygame.key.get_pressed()
-            if keys[pygame.K_a] and not pygame.sprite.spritecollideany(self, tiles_collide_group):
+            if keys[pygame.K_a] and self.hod['left']:
                 self.move_play = True
                 self.m()
                 self.flag = True
                 self.rotate()
                 self.rect.x -= SPEED_PLAYER
-            elif keys[pygame.K_d] and not pygame.sprite.spritecollideany(self, tiles_collide_group):
+            elif keys[pygame.K_d] and self.hod['right']:
                 self.move_play = True
                 self.m()
                 self.flag = False
                 self.rect.x += SPEED_PLAYER
-            elif keys[pygame.K_w] and not pygame.sprite.spritecollideany(self, tiles_collide_group):
+            elif keys[pygame.K_w] and self.hod['up']:
                 self.move_play = True
                 self.m()
                 if self.flag:
                     self.rotate()
                 self.rect.y -= SPEED_PLAYER
-            elif keys[pygame.K_s] and not pygame.sprite.spritecollideany(self, tiles_collide_group):
+            elif keys[pygame.K_s] and self.hod['down']:
                 self.move_play = True
                 self.m()
                 if self.flag:
@@ -337,8 +348,8 @@ class Mag(pygame.sprite.Sprite):
             self.death_flag = True
         pygame.draw.rect(screen, 'red', (10, 10, 200, 20))
         pygame.draw.rect(screen, 'green', (10, 10, int((self.hp / self.max_hp) * 200), 20))
-        pygame.draw.rect(screen, 'red', (30, 30, 200, 20))
-        pygame.draw.rect(screen, '#42aaff', (30, 30, int((self.mana / self.max_mana) * 200), 20))
+        pygame.draw.rect(screen, 'red', (10, 30, 200, 20))
+        pygame.draw.rect(screen, '#42aaff', (10, 30, int((self.mana / self.max_mana) * 200), 20))
         hp_bottle = pygame.transform.scale(load_image('hp.png'), (50, 50))
         screen.blit(hp_bottle, (0, 60))
         mana_bottle = pygame.transform.scale(load_image('mana.png'), (50, 50))
