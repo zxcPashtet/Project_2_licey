@@ -13,11 +13,12 @@ mob_sprites = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
 tiles_collide_group = pygame.sprite.Group()
+attacks_sprites = pygame.sprite.Group()
 SPEED_SKELETON = 10
 SPEED_PLAYER = 50
 FPS = 10
-PLAYER_X, PLAYER_Y, MAX_HP_PLAYER, PLAYER_DAMAGE, PLAYER_DEFENSE, PLAYER_POTIONS_HP, PLAYER_POTIONS_MANA = 250, 250, 100, 15, 5, 3, 5
-MAX_HP_MOB, MOB_DAMAGE, MOB_DEFENSE = 100, 20, 3
+PLAYER_X, PLAYER_Y, MAX_HP_PLAYER, PLAYER_DAMAGE, PLAYER_DEFENSE, PLAYER_POTIONS_HP, PLAYER_POTIONS_MANA = 250, 250, 100, 50, 5, 3, 5
+MAX_HP_MOB, MOB_DAMAGE, MOB_DEFENSE = 100, 20, 0
 
 sound1 = pygame.mixer.Sound('data/knight_attack.mp3')
 sound2 = pygame.mixer.Sound('data/knight_move.mp3')
@@ -89,7 +90,7 @@ def generate_level(level):
                     new_player = Mag(x, y, MAX_HP_PLAYER, PLAYER_DAMAGE, PLAYER_DEFENSE, PLAYER_POTIONS_HP, PLAYER_POTIONS_MANA, 200)
             elif level[y][x] == "$":
                 Tile('empty', x, y)
-                mob = Mob(x, y, MAX_HP_MOB, MOB_DAMAGE, MOB_DEFENSE)
+                Mob(x, y, MAX_HP_MOB, MOB_DAMAGE, MOB_DEFENSE)
     return new_player, x, y
 
 
@@ -108,7 +109,7 @@ class Knight(pygame.sprite.Sprite):
         self.flag, self.move_play, self.death_flag = False, False, False
         self.flag_attack = 0
         self.potions_hp = potions_hp
-        self.damage, self.hp, self.defense, self.max_hp = damage, max_hp, defense, max_hp
+        self.damage, self.hp, self.defense, self.max_hp, self.crit = damage, max_hp, defense, max_hp, 5
 
     def attack(self, event):
         if event.key == pygame.K_f:
@@ -125,7 +126,10 @@ class Knight(pygame.sprite.Sprite):
                     if self.attack_cur == len(self.animation_list[self.flag_attack]) - 1:
                         for i in mob_sprites:
                             if pygame.sprite.collide_mask(self, i):
-                                i.hp = i.hp - (self.damage - i.defense)
+                                if random.randrange(1, 400) / 4 <= self.crit:
+                                    i.hp = i.hp - ((self.damage + (self.damage // 100) * self.crit) - i.defense)
+                                else:
+                                    i.hp = i.hp - (self.damage - i.defense)
                                 if i.hp <= 0:
                                     i.death_flag = True
                                     i.hp = 0
@@ -241,18 +245,19 @@ class Mag(pygame.sprite.Sprite):
         self.flag_attack = 0
         self.hod = {'left': True, 'down': True, 'right': True, 'up': True}
         self.damage, self.hp, self.defense, self.max_hp, self.mana, self.max_mana = damage, max_hp, defense, max_hp, max_mana, max_mana
+        self.shoot_cooldown = 0
+        self.defolt_attack, self.super_attack = 10, 30
 
     def attack(self, event):
         if event.key == pygame.K_f:
-            self.attack_cur = 0
-            self.flag_attack = 1
+            if self.shoot_cooldown == 0:
+                self.shoot_cooldown = 20
+                self.flag_attack = 1
         elif event.key == pygame.K_r and self.mana - 10 >= 0:
-            self.mana -= 10
-            self.attack_cur = 0
-            self.flag_attack = 4
-
-    def action_bullet(self):
-        pass
+            if self.shoot_cooldown == 0:
+                self.mana -= 10
+                self.shoot_cooldown = 20
+                self.flag_attack = 4
 
     def action_attack(self):
         if not self.death_flag:
@@ -269,13 +274,14 @@ class Mag(pygame.sprite.Sprite):
                                     i.death_flag = True
                                     i.hp = 0
                     self.attack_cur = (self.attack_cur + 1)
-                    if self.attack_cur == 5 and self.flag_attack == 1:
-                        pass
+                    if self.attack_cur == 6 and self.flag_attack == 1:
+                        bullet = Bullet(self.rect.centerx, self.rect.centery, self.flag, self.defolt_attack, self.animation_bullet[0])
+                        attacks_sprites.add(bullet)
                     if self.attack_cur == 12 and self.flag_attack == 4:
-                        pass
+                        bullet = Bullet(self.rect.centerx, self.rect.centery, self.flag, self.super_attack, self.animation_bullet[1])
+                        attacks_sprites.add(bullet)
                 if self.flag:
                     self.rotate()
-                    self.animation_list[0][2] = pygame.transform.flip(self.animation_bullet[0][2], True, False)
                 if not self.flag:
                     self.mask = pygame.mask.from_surface(self.image)
                 if self.attack_cur == len(self.animation_list[self.flag_attack]) - 1:
@@ -360,6 +366,8 @@ class Mag(pygame.sprite.Sprite):
         font = pygame.font.Font(None, 30)
         text = font.render(f"{self.potions_mana}", True, (255, 255, 255))
         screen.blit(text, (30, 110))
+        if self.shoot_cooldown > 0:
+            self.shoot_cooldown -= 1
 
     def dead(self):
         death_cooldown = 125
@@ -370,6 +378,43 @@ class Mag(pygame.sprite.Sprite):
                 self.death_cur = self.death_cur + 1
             if self.death_cur == 3:
                 self.death_cur = 3
+
+class Bullet(pygame.sprite.Sprite):
+    def __init__(self, x, y, direction, attack, image):
+        pygame.sprite.Sprite.__init__(self)
+        self.speed = 20
+        self.attack_animation, self.attack_cur = image, 0
+        self.image = self.attack_animation[self.attack_cur]
+        self.rect = self.image.get_rect()
+        if direction:
+            self.image = pygame.transform.flip(self.image, True, False)
+            self.rect.center = (x + 50 * -1, y)
+        else:
+            self.rect.center = (x + 50, y)
+        self.direction, self.attack = direction, attack
+        self.update_time = pygame.time.get_ticks()
+
+    def update(self):
+        if len(self.attack_animation) == 9:
+            attack_cooldown = 120
+        else:
+            attack_cooldown = 250
+        if pygame.time.get_ticks() - self.update_time > attack_cooldown:
+            self.update_time = pygame.time.get_ticks()
+            self.attack_cur = (self.attack_cur + 1) % (len(self.attack_animation) - 1)
+        if self.direction:
+            self.rect.x += (-1 * self.speed)
+            self.image = pygame.transform.flip(self.attack_animation[self.attack_cur], True, False)
+        else:
+            self.rect.x += self.speed
+            self.image = self.attack_animation[self.attack_cur]
+        if self.rect.right < 500 or self.rect.left > height + 200:
+            self.kill()
+        for i in mob_sprites:
+            if pygame.sprite.spritecollide(i, attacks_sprites, False):
+                if not i.death_flag:
+                    self.kill()
+                    i.hp -= self.attack
 
 
 class Mob(pygame.sprite.Sprite):
@@ -411,21 +456,22 @@ class Mob(pygame.sprite.Sprite):
     def action_attack(self):
         self.move_play = False
         attack_cooldown = 125
-        self.image = self.animation_list[2][self.attack_cur]
-        if pygame.time.get_ticks() - self.update_time > attack_cooldown:
-            self.update_time = pygame.time.get_ticks()
-            if self.attack_cur == len(self.animation_list[2]) - 1:
-                if pygame.sprite.collide_mask(self, player):
-                    player.hp = player.hp - (self.damage - player.defense)
-                    if player.hp <= 0:
-                        player.death_flag = True
-                        player.hp = 0
-            self.attack_cur = (self.attack_cur + 1) % 4
-        if self.animation_list[2][3] and player.rect[0] < self.rect[0]:
-            self.rotate()
-            self.mask = pygame.mask.from_surface(self.image)
-        elif player.rect[0] < self.rect[0]:
-            self.rotate()
+        if not self.death_flag:
+            self.image = self.animation_list[2][self.attack_cur]
+            if pygame.time.get_ticks() - self.update_time > attack_cooldown:
+                self.update_time = pygame.time.get_ticks()
+                if self.attack_cur == len(self.animation_list[2]) - 1:
+                    if pygame.sprite.collide_mask(self, player):
+                        player.hp = player.hp - (self.damage - player.defense)
+                        if player.hp <= 0:
+                            player.death_flag = True
+                            player.hp = 0
+                self.attack_cur = (self.attack_cur + 1) % 4
+            if self.animation_list[2][3] and player.rect[0] < self.rect[0]:
+                self.rotate()
+                self.mask = pygame.mask.from_surface(self.image)
+            elif player.rect[0] < self.rect[0]:
+                self.rotate()
 
     def move(self):
         if not self.death_flag and self.move_play:
@@ -500,7 +546,6 @@ while running:
             running = False
         if event.type == pygame.KEYDOWN:
             player.attack(event)
-        if event.type == pygame.KEYDOWN:
             player.use_health(event)
     screen.fill((0, 0, 0))
     camera.update(player)
@@ -524,8 +569,9 @@ while running:
     player.health()
     if player.death_flag:
         player.dead()
-    if player_class == 1:
-        player.action_bullet()
+
+    attacks_sprites.update()
+    attacks_sprites.draw(screen)
 
     clock.tick(FPS)
     pygame.display.flip()
