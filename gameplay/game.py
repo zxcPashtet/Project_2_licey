@@ -17,11 +17,11 @@ attacks_sprites = pygame.sprite.Group()
 SPEED_SKELETON = 10
 SPEED_PLAYER = 50
 FPS = 10
-PLAYER_X, PLAYER_Y, MAX_HP_PLAYER, PLAYER_DAMAGE, PLAYER_DEFENSE, PLAYER_POTIONS_HP, PLAYER_POTIONS_MANA = 250, 250, 100, 50, 5, 3, 5
+PLAYER_X, PLAYER_Y, MAX_HP_PLAYER, PLAYER_DAMAGE, PLAYER_DEFENSE, PLAYER_POTIONS_HP, PLAYER_POTIONS_MANA, MAX_MANA = 250, 250, 100, 50, 5, 3, 5, 200
 MAX_HP_MOB, MOB_DAMAGE, MOB_DEFENSE = 100, 20, 0
 
-sound1 = pygame.mixer.Sound('data/knight_attack.mp3')
-sound2 = pygame.mixer.Sound('data/knight_move.mp3')
+sound1 = pygame.mixer.Sound('data/Knight/knight_attack.mp3')
+sound2 = pygame.mixer.Sound('data/Knight/knight_move.mp3')
 
 
 def load_image(name, colorkey=None):
@@ -41,9 +41,9 @@ def load_image(name, colorkey=None):
 
 
 tile_images = {
-    'wall': pygame.transform.scale(load_image('cave_wall.png'), (150, 150)),
-    'empty': pygame.transform.scale(load_image('cave_pol.png'), (150, 150)),
-    'exit': pygame.transform.scale(load_image('cave.png'), (150, 150))
+    'wall': pygame.transform.scale(load_image('levels/cave_wall.png'), (150, 150)),
+    'empty': pygame.transform.scale(load_image('levels/cave_pol.png'), (150, 150)),
+    'exit': pygame.transform.scale(load_image('levels/cave.png'), (150, 150))
 }
 tile_width = tile_height = 150
 
@@ -87,10 +87,13 @@ def generate_level(level):
                 if player_class == 0:
                     new_player = Knight(x, y, MAX_HP_PLAYER, PLAYER_DAMAGE, PLAYER_DEFENSE, PLAYER_POTIONS_HP)
                 else:
-                    new_player = Mag(x, y, MAX_HP_PLAYER, PLAYER_DAMAGE, PLAYER_DEFENSE, PLAYER_POTIONS_HP, PLAYER_POTIONS_MANA, 200)
+                    new_player = Mag(x, y, MAX_HP_PLAYER, PLAYER_DAMAGE, PLAYER_DEFENSE, PLAYER_POTIONS_HP, PLAYER_POTIONS_MANA, MAX_MANA)
             elif level[y][x] == "$":
                 Tile('empty', x, y)
-                Mob(x, y, MAX_HP_MOB, MOB_DAMAGE, MOB_DEFENSE)
+                Warrior(x, y, MAX_HP_MOB, MOB_DAMAGE, MOB_DEFENSE)
+            elif level[y][x] == '&':
+                Tile('empty', x, y)
+                Archero(x, y, MAX_HP_MOB // 2, MOB_DAMAGE, MOB_DEFENSE)
     return new_player, x, y
 
 
@@ -98,10 +101,10 @@ class Knight(pygame.sprite.Sprite):
     def __init__(self, x, y, max_hp, damage, defense, potions_hp):
         super().__init__(player_sprites, all_sprites)
         self.animation_list = []
-        self.animation_list.append([pygame.transform.scale(load_image(f"walk/walk{i}.png"), (200, 130)) for i in range(1, 9)])
-        self.animation_list.append([pygame.transform.scale(load_image(f"attack/attack{i}.png"), (200, 130)) for i in range(1, 6)])
-        self.animation_list.append([pygame.transform.scale(load_image(f"idle/idle{i}.png"), (200, 130)) for i in range(1, 5)])
-        self.animation_list.append([pygame.transform.scale(load_image(f"death/Dead{i}.png"), (200, 130)) for i in range(1, 7)])
+        self.animation_list.append([pygame.transform.scale(load_image(f"Knight/walk/walk{i}.png"), (200, 130)) for i in range(1, 9)])
+        self.animation_list.append([pygame.transform.scale(load_image(f"Knight/attack/attack{i}.png"), (200, 130)) for i in range(1, 6)])
+        self.animation_list.append([pygame.transform.scale(load_image(f"Knight/idle/idle{i}.png"), (200, 130)) for i in range(1, 5)])
+        self.animation_list.append([pygame.transform.scale(load_image(f"Knight/death/Dead{i}.png"), (200, 130)) for i in range(1, 7)])
         self.frame_index, self.attack_cur, self.move_cur, self.idle_cur, self.death_cur = 2, 0, 0, 0, 0
         self.update_time = pygame.time.get_ticks()
         self.image = self.animation_list[2][self.attack_cur]
@@ -206,7 +209,7 @@ class Knight(pygame.sprite.Sprite):
             self.death_flag = True
         pygame.draw.rect(screen, 'red', (10, 10, 200, 20))
         pygame.draw.rect(screen, 'green', (10, 10, int((self.hp / self.max_hp) * 200), 20))
-        hp_bottle = pygame.transform.scale(load_image('hp.png'), (50, 50))
+        hp_bottle = pygame.transform.scale(load_image('levels/hp.png'), (50, 50))
         screen.blit(hp_bottle, (0, 60))
         font = pygame.font.Font(None, 30)
         text = font.render(f"{self.potions_hp}", True, (255, 255, 255))
@@ -227,15 +230,15 @@ class Mag(pygame.sprite.Sprite):
     def __init__(self, x, y, max_hp, damage, defense, potions_hp, potions_mana, max_mana):
         super().__init__(player_sprites, all_sprites)
         self.animation_list = []
-        self.animation_list.append([pygame.transform.scale(load_image(f"mag_walk/{i}.png"), (200, 130)) for i in range(1, 8)])
-        self.animation_list.append([pygame.transform.scale(load_image(f"mag_attack1/{i}.png"), (200, 130)) for i in range(1, 10)])
-        self.animation_list.append([pygame.transform.scale(load_image(f"mag_idle/{i}.png"), (200, 130)) for i in range(1, 9)])
-        self.animation_list.append([pygame.transform.scale(load_image(f"mag_death/{i}.png"), (200, 130)) for i in range(1, 5)])
-        self.animation_list.append([pygame.transform.scale(load_image(f"mag_attack2/{i}.png"), (200, 130)) for i in range(1, 17)])
+        self.animation_list.append([pygame.transform.scale(load_image(f"Mag/mag_walk/{i}.png"), (200, 130)) for i in range(1, 8)])
+        self.animation_list.append([pygame.transform.scale(load_image(f"Mag/mag_attack1/{i}.png"), (200, 130)) for i in range(1, 10)])
+        self.animation_list.append([pygame.transform.scale(load_image(f"Mag/mag_idle/{i}.png"), (200, 130)) for i in range(1, 9)])
+        self.animation_list.append([pygame.transform.scale(load_image(f"Mag/mag_death/{i}.png"), (200, 130)) for i in range(1, 5)])
+        self.animation_list.append([pygame.transform.scale(load_image(f"Mag/mag_attack2/{i}.png"), (200, 130)) for i in range(1, 17)])
         self.bullets = []
         self.animation_bullet = []
-        self.animation_bullet.append([load_image(f"charge1/{i}.png") for i in range(1, 7)])
-        self.animation_bullet.append([load_image(f"charge2/{i}.png") for i in range(1, 10)])
+        self.animation_bullet.append([load_image(f"Mag/charge/charge1/{i}.png") for i in range(1, 7)])
+        self.animation_bullet.append([load_image(f"Mag/charge/charge2/{i}.png") for i in range(1, 10)])
         self.frame_index, self.attack_cur, self.move_cur, self.idle_cur, self.death_cur = 2, 0, 0, 0, 0
         self.update_time = pygame.time.get_ticks()
         self.potions_hp, self.potions_mana = potions_hp, potions_mana
@@ -266,19 +269,12 @@ class Mag(pygame.sprite.Sprite):
                 self.image = self.animation_list[self.flag_attack][self.attack_cur]
                 if pygame.time.get_ticks() - self.update_time > attack_cooldown:
                     self.update_time = pygame.time.get_ticks()
-                    for i in mob_sprites:
-                        if self.attack_cur == len(self.animation_list[self.flag_attack]) - 1:
-                            if pygame.sprite.collide_mask(self, i):
-                                i.hp = i.hp - (self.damage - i.defense)
-                                if i.hp <= 0:
-                                    i.death_flag = True
-                                    i.hp = 0
                     self.attack_cur = (self.attack_cur + 1)
                     if self.attack_cur == 6 and self.flag_attack == 1:
-                        bullet = Bullet(self.rect.centerx, self.rect.centery, self.flag, self.defolt_attack, self.animation_bullet[0])
+                        bullet = Bullet(self.rect.centerx, self.rect.centery, self.flag, self.defolt_attack, self.animation_bullet[0], 'player')
                         attacks_sprites.add(bullet)
                     if self.attack_cur == 12 and self.flag_attack == 4:
-                        bullet = Bullet(self.rect.centerx, self.rect.centery, self.flag, self.super_attack, self.animation_bullet[1])
+                        bullet = Bullet(self.rect.centerx, self.rect.centery, self.flag, self.super_attack, self.animation_bullet[1], 'player')
                         attacks_sprites.add(bullet)
                 if self.flag:
                     self.rotate()
@@ -356,9 +352,9 @@ class Mag(pygame.sprite.Sprite):
         pygame.draw.rect(screen, 'green', (10, 10, int((self.hp / self.max_hp) * 200), 20))
         pygame.draw.rect(screen, 'red', (10, 30, 200, 20))
         pygame.draw.rect(screen, '#42aaff', (10, 30, int((self.mana / self.max_mana) * 200), 20))
-        hp_bottle = pygame.transform.scale(load_image('hp.png'), (50, 50))
+        hp_bottle = pygame.transform.scale(load_image('levels/hp.png'), (50, 50))
         screen.blit(hp_bottle, (0, 60))
-        mana_bottle = pygame.transform.scale(load_image('mana.png'), (50, 50))
+        mana_bottle = pygame.transform.scale(load_image('levels/mana.png'), (50, 50))
         screen.blit(mana_bottle, (0, 110))
         font = pygame.font.Font(None, 30)
         text = font.render(f"{self.potions_hp}", True, (255, 255, 255))
@@ -380,11 +376,15 @@ class Mag(pygame.sprite.Sprite):
                 self.death_cur = 3
 
 class Bullet(pygame.sprite.Sprite):
-    def __init__(self, x, y, direction, attack, image):
+    def __init__(self, x, y, direction, attack, image, attackers):
         pygame.sprite.Sprite.__init__(self)
         self.speed = 20
-        self.attack_animation, self.attack_cur = image, 0
-        self.image = self.attack_animation[self.attack_cur]
+        self.attack_cur = 0
+        if attackers == 'mob':
+            self.image = image
+        else:
+            self.attack_animation = image
+            self.image = self.attack_animation[self.attack_cur]
         self.rect = self.image.get_rect()
         if direction:
             self.image = pygame.transform.flip(self.image, True, False)
@@ -393,38 +393,55 @@ class Bullet(pygame.sprite.Sprite):
             self.rect.center = (x + 50, y)
         self.direction, self.attack = direction, attack
         self.update_time = pygame.time.get_ticks()
+        self.attack_cooldown = 0
+        self.attackers = attackers
 
     def update(self):
-        if len(self.attack_animation) == 9:
-            attack_cooldown = 120
-        else:
-            attack_cooldown = 250
-        if pygame.time.get_ticks() - self.update_time > attack_cooldown:
+        if self.attackers == 'player':
+            if len(self.attack_animation) == 9:
+                self.attack_cooldown = 120
+            else:
+                self.attack_cooldown = 250
+        if pygame.time.get_ticks() - self.update_time > self.attack_cooldown and self.attackers == 'player':
             self.update_time = pygame.time.get_ticks()
             self.attack_cur = (self.attack_cur + 1) % (len(self.attack_animation) - 1)
         if self.direction:
             self.rect.x += (-1 * self.speed)
-            self.image = pygame.transform.flip(self.attack_animation[self.attack_cur], True, False)
+            if self.attackers == 'player':
+                self.image = pygame.transform.flip(self.attack_animation[self.attack_cur], True, False)
+            else:
+                self.image = pygame.transform.flip(self.image, True, False)
         else:
             self.rect.x += self.speed
-            self.image = self.attack_animation[self.attack_cur]
+            if self.attackers == 'player':
+                self.image = self.attack_animation[self.attack_cur]
+            else:
+                self.image = self.image
         if self.rect.right < 500 or self.rect.left > height + 200:
             self.kill()
-        for i in mob_sprites:
-            if pygame.sprite.spritecollide(i, attacks_sprites, False):
-                if not i.death_flag:
+        if self.attackers == 'mob':
+            if pygame.sprite.spritecollide(player, attacks_sprites, False):
+                if not player.death_flag:
                     self.kill()
-                    i.hp -= self.attack
+                    player.hp -= self.attack
+        else:
+            for i in mob_sprites:
+                if pygame.sprite.spritecollide(i, attacks_sprites, False):
+                    if not i.death_flag:
+                        self.kill()
+                        i.hp -= self.attack
+                if i.hp <= 0:
+                    i.death_flag = True
 
 
-class Mob(pygame.sprite.Sprite):
+class Warrior(pygame.sprite.Sprite):
     def __init__(self, x, y, max_hp, damage, defense):
         super().__init__(mob_sprites, all_sprites)
         self.animation_list = []
-        self.animation_list.append([pygame.transform.scale(load_image(f"skeleton_walk/skeleton_walk{i}.png"), (200, 130)) for i in range(1, 8)])
-        self.animation_list.append([pygame.transform.scale(load_image(f"skeleton_idle/skeleton_idle{i}.png"), (200, 130)) for i in range(1, 8)])
-        self.animation_list.append([pygame.transform.scale(load_image(f"skeleton_attack/skeleton_attack{i}.png"), (200, 130)) for i in range(1, 5)])
-        self.animation_list.append([pygame.transform.scale(load_image(f"skeleton_death/skeleton_dead{i}.png"), (200, 130)) for i in range(1, 5)])
+        self.animation_list.append([pygame.transform.scale(load_image(f"Skeleton_warrior/skeleton_walk/skeleton_walk{i}.png"), (200, 130)) for i in range(1, 8)])
+        self.animation_list.append([pygame.transform.scale(load_image(f"Skeleton_warrior/skeleton_idle/skeleton_idle{i}.png"), (200, 130)) for i in range(1, 8)])
+        self.animation_list.append([pygame.transform.scale(load_image(f"Skeleton_warrior/skeleton_attack/skeleton_attack{i}.png"), (200, 130)) for i in range(1, 5)])
+        self.animation_list.append([pygame.transform.scale(load_image(f"Skeleton_warrior/skeleton_death/skeleton_dead{i}.png"), (200, 130)) for i in range(1, 5)])
         self.frame_index, self.cur = 1, 0
         self.move_cur, self.death_cur, self.attack_cur, self.idle_cur = 0, 0, 0, 0
         self.max_hp, self.hp, self.defense, self.damage = max_hp, max_hp, defense, damage
@@ -505,6 +522,106 @@ class Mob(pygame.sprite.Sprite):
                 self.death_cur = (self.death_cur + 1)
             if self.death_cur == 3:
                 self.death_cur = 3
+
+    def m(self):
+        self.image = self.animation_list[0][self.move_cur]
+        self.move_cur = (self.move_cur + 1) % 7
+
+    def rotate(self):
+        self.image = pygame.transform.flip(self.image, True, False)
+
+    def health(self):
+        if self.hp == 0:
+            self.death_flag = True
+        if not self.death_flag:
+            pygame.draw.rect(screen, 'red', (self.rect.x + 50, self.rect.y, 20, 3))
+            pygame.draw.rect(screen, 'green', (self.rect.x + 50, self.rect.y, int((self.hp / self.max_hp) * 20), 3))
+
+
+class Archero(pygame.sprite.Sprite):
+    def __init__(self, x, y, max_hp, damage, defense):
+        super().__init__(mob_sprites, all_sprites)
+        self.animation_list = []
+        self.animation_list.append([pygame.transform.scale(load_image(f"Skeleton_archero/skeleton_walk/{i}.png"), (200, 130)) for i in range(1, 9)])
+        self.animation_list.append([pygame.transform.scale(load_image(f"Skeleton_archero/skeleton_idle/{i}.png"), (200, 130)) for i in range(1, 8)])
+        self.animation_list.append([pygame.transform.scale(load_image(f"Skeleton_archero/skeleton_attack/{i}.png"), (200, 130)) for i in range(1, 16)])
+        self.animation_list.append([pygame.transform.scale(load_image(f"Skeleton_archero/skeleton_death/{i}.png"), (200, 130)) for i in range(1, 6)])
+        self.arrow = pygame.transform.scale(load_image('Skeleton_archero/Arrow.png'), (100, 100))
+        self.frame_index, self.cur = 1, 0
+        self.move_cur, self.death_cur, self.attack_cur, self.idle_cur = 0, 0, 0, 0
+        self.max_hp, self.hp, self.defense, self.damage = max_hp, max_hp, defense, damage
+        self.x, self.y = x, y
+        self.update_time = pygame.time.get_ticks()
+        self.image = self.animation_list[self.frame_index][self.cur]
+        self.rect = self.image.get_rect().move(13 + x * tile_width, 5 + y * tile_height)
+        self.mask = pygame.mask.from_surface(self.image)
+        self.death_flag, self.attack_flag, self.move_play, self.idle_flag, self.flag = False, 0, False, True, False
+        self.defolt_attack = damage
+
+    def idle(self):
+        if self.idle_flag:
+            idle_cooldown = 200
+            self.image = self.animation_list[1][self.idle_cur]
+            if pygame.time.get_ticks() - self.update_time > idle_cooldown:
+                self.update_time = pygame.time.get_ticks()
+                self.idle_cur = (self.idle_cur + 1) % 6
+        if not self.idle_flag:
+            self.idle_cur = 0
+
+    def attack(self):
+        if math.sqrt((player.rect.center[0] - self.rect.center[0]) ** 2 + (
+                player.rect.center[1] - self.rect.center[1]) ** 2) <= 360:
+            self.action_attack()
+            self.idle_flag = False
+        else:
+            self.move_play = True
+
+    def action_attack(self):
+        self.move_play = False
+        attack_cooldown = 125
+        if not self.death_flag:
+            self.image = self.animation_list[2][self.attack_cur]
+            if pygame.time.get_ticks() - self.update_time > attack_cooldown:
+                self.update_time = pygame.time.get_ticks()
+                if self.attack_cur == 12:
+                    bullet = Bullet(self.rect.centerx, self.rect.centery, self.flag, self.defolt_attack, self.arrow, 'mob')
+                    attacks_sprites.add(bullet)
+                self.attack_cur = (self.attack_cur + 1) % 15
+            if self.animation_list[2][3] and player.rect[0] < self.rect[0]:
+                self.rotate()
+                self.mask = pygame.mask.from_surface(self.image)
+            elif player.rect[0] < self.rect[0]:
+                self.rotate()
+
+    def move(self):
+        if not self.death_flag and self.move_play:
+            if math.sqrt((player.rect.center[0] - self.rect.center[0]) ** 2 + (
+                    player.rect.center[1] - self.rect.center[1]) ** 2) <= 480:
+                self.idle_flag = False
+                if player.rect[1] > self.rect[1]:
+                    self.m()
+                    self.rect.y += SPEED_SKELETON
+                if player.rect[1] < self.rect[1]:
+                    self.m()
+                    self.rect.y -= SPEED_SKELETON
+                if player.rect[0] < self.rect[0]:
+                    self.rotate()
+                    self.flag = True
+                if player.rect[0] > self.rect[0]:
+                    self.flag = False
+                if player.rect[1] == self.rect[1]:
+                    self.idle_flag = True
+
+    def dead(self):
+        self.idle_flag = False
+        attack_cooldown = 125
+        if self.death_flag:
+            self.image = self.animation_list[3][self.death_cur]
+            if pygame.time.get_ticks() - self.update_time > attack_cooldown and self.death_cur != 4:
+                self.update_time = pygame.time.get_ticks()
+                self.death_cur = (self.death_cur + 1)
+            if self.death_cur == 4:
+                self.death_cur = 4
 
     def m(self):
         self.image = self.animation_list[0][self.move_cur]
