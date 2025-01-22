@@ -39,6 +39,7 @@ font_small = pygame.font.Font(load_font('Courier WGL4 Italic.otf'), 25)
 font_smaller = pygame.font.Font(load_font('Courier WGL4 Italic.otf'), 20)
 
 sound_buy_sell = pygame.mixer.Sound(os.path.join('sound', 'buy_1.mp3'))
+sound_buy_sell.set_volume(0.1)
 
 class Inventory:
     def __init__(self, width, height):
@@ -159,12 +160,12 @@ class Inventory:
                 tab_inventory[self.position] = 'None'
                 if self.portable != 'None':
                     self.image_showing_characteristics = str(self.portable) + '.png'
-                if flag_B and flag_bench:
-                    gold += int(self.cursor.execute(f"""SELECT cost FROM Items WHERE item = '{str(self.portable) + '.png'}'""").fetchone()[0]) // 2
-                    self.portable = 'None'
-                    self.image_showing_characteristics = 'None'
-                    self.click = False
-                    sound_buy_sell.play()
+                    if flag_B and flag_bench:
+                        gold += int(self.cursor.execute(f"""SELECT cost FROM Items WHERE item = '{str(self.portable) + '.png'}'""").fetchone()[0]) // 2
+                        self.portable = 'None'
+                        self.image_showing_characteristics = 'None'
+                        self.click = False
+                        sound_buy_sell.play()
         if event.type == pygame.MOUSEBUTTONUP and self.click and self.portable != 'None':
             self.cell = self.clicking_cell(event.pos)
             self.click = False
@@ -309,12 +310,12 @@ class Equipment:
                 tab_equipment[self.position] = 'None'
                 if self.portable != 'None':
                     self.image_showing_characteristics = str(self.portable) + '.png'
-                if flag_B and flag_bench:
-                    gold += int(self.cursor.execute(f"""SELECT cost FROM Items WHERE item = '{str(self.portable) + '.png'}'""").fetchone()[0]) // 2
-                    self.portable = 'None'
-                    self.image_showing_characteristics = 'None'
-                    self.click = False
-                    sound_buy_sell.play()
+                    if flag_B and flag_bench:
+                        gold += int(self.cursor.execute(f"""SELECT cost FROM Items WHERE item = '{str(self.portable) + '.png'}'""").fetchone()[0]) // 2
+                        self.portable = 'None'
+                        self.image_showing_characteristics = 'None'
+                        self.click = False
+                        sound_buy_sell.play()
         if event.type == pygame.MOUSEBUTTONUP and self.click and self.portable != 'None':
             self.click = False
             self.cell = self.clicking_cell(event.pos)
