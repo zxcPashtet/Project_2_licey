@@ -711,6 +711,7 @@ while running:
                 if event.key == pygame.K_RETURN:
                     if rasa is not None and complexity is not None and name_hero.split() != []:
                         text_error = font_smaller.render('', True, (255, 0, 0))
+                        running = False
                     else:
                         if complexity is None:
                             text_error = font_smaller.render('Выберите сложность игры', True,
