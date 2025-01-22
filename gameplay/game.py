@@ -570,7 +570,7 @@ class Archero(pygame.sprite.Sprite):
 
     def attack(self):
         if math.sqrt((player.rect.center[0] - self.rect.center[0]) ** 2 + (
-                player.rect.center[1] - self.rect.center[1]) ** 2) <= 360:
+                player.rect.center[1] - self.rect.center[1]) ** 2) <= 480:
             self.action_attack()
             self.idle_flag = False
         else:
@@ -596,7 +596,7 @@ class Archero(pygame.sprite.Sprite):
     def move(self):
         if not self.death_flag and self.move_play:
             if math.sqrt((player.rect.center[0] - self.rect.center[0]) ** 2 + (
-                    player.rect.center[1] - self.rect.center[1]) ** 2) <= 480:
+                    player.rect.center[1] - self.rect.center[1]) ** 2) <= 600:
                 self.idle_flag = False
                 if player.rect[1] > self.rect[1]:
                     self.m()
