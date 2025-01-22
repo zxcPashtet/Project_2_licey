@@ -211,14 +211,15 @@ def blit_new_game(flag_rect1, flag_rect2, screen):
     screen.blit(text_complexity_game, (((width // 2) - (text_complexity_game.get_width() // 2)), 620))
     screen.blit(text_knight, (456, 460))
     screen.blit(text_wizard, (880, 460))
-    screen.blit(text_health, (456, 500))
-    screen.blit(text_damage, (456, 520))
-    screen.blit(text_protection, (456, 540))
-    screen.blit(text_dexterity, (456, 560))
-    screen.blit(text_health, (880, 500))
-    screen.blit(text_damage, (880, 520))
-    screen.blit(text_protection, (880, 540))
-    screen.blit(text_dexterity, (880, 560))
+    screen.blit(text_health_k, (456, 500))
+    screen.blit(text_damage_k, (456, 520))
+    screen.blit(text_protection_k, (456, 540))
+    screen.blit(text_dexterity_k, (456, 560))
+    screen.blit(text_health_w, (880, 500))
+    screen.blit(text_mana_w, (880, 520))
+    screen.blit(text_damage_w, (880, 540))
+    screen.blit(text_protection_w, (880, 560))
+    screen.blit(text_dexterity_w, (880, 580))
     screen.blit(text_complexity_normal, (456, 670))
     screen.blit(text_complexity_hard, (456, 720))
     screen.blit(text_error, (0, 900 - text_error.get_height()))
@@ -434,6 +435,20 @@ def blit_how_to_play():
     screen.blit(text_f, (width // 2 - text_movement.get_width() // 2 - text_wasd.get_width() // 2, 130))
     screen.blit(text_hit, (width // 2 - text_movement.get_width() // 2 -
                                 text_wasd.get_width() // 2 + text_f.get_width() + 10, 135))
+    screen.blit(text_r, (width // 2 - text_movement.get_width() // 2 - text_wasd.get_width() // 2, 180))
+    screen.blit(text_strong_hit, (width // 2 - text_movement.get_width() // 2 - text_wasd.get_width() // 2 + 30, 185))
+    screen.blit(text_tab, (width // 2 - text_movement.get_width() // 2 - text_wasd.get_width() // 2, 230))
+    screen.blit(text_inventory, (width // 2 - text_movement.get_width() // 2 - text_wasd.get_width() // 2 + 75, 235))
+    screen.blit(text_lkm, (width // 2 - text_movement.get_width() // 2 - text_wasd.get_width() // 2, 280))
+    screen.blit(text_interaction, (width // 2 - text_movement.get_width() // 2 - text_wasd.get_width() // 2 + 75, 285))
+    screen.blit(text_b_lkm, (width // 2 - text_movement.get_width() // 2 - text_wasd.get_width() // 2, 330))
+    screen.blit(text_sell, (width // 2 - text_movement.get_width() // 2 - text_wasd.get_width() // 2 + 118, 335))
+    screen.blit(text_z, (width // 2 - text_movement.get_width() // 2 - text_wasd.get_width() // 2, 380))
+    screen.blit(text_regen_hp, (width // 2 - text_movement.get_width() // 2 - text_wasd.get_width() // 2 + 30, 385))
+    screen.blit(text_x, (width // 2 - text_movement.get_width() // 2 - text_wasd.get_width() // 2, 430))
+    screen.blit(text_regen_mn, (width // 2 - text_movement.get_width() // 2 - text_wasd.get_width() // 2 + 30, 435))
+    screen.blit(text_short_guide, (width // 2 - text_short_guide.get_width() // 2, 580))
+    screen.blit(text_guide, (0, 640))
 
 
 class Knight(pygame.sprite.Sprite):
@@ -565,10 +580,15 @@ while running:
                                                        (255, 255, 255))
                     text_knight = font.render('Рыцарь', True, (255, 255, 255))
                     text_wizard = font.render('Волшебник', True, (255, 255, 255))
-                    text_health = font_smaller.render('Здоровье', True, (255, 255, 255))
-                    text_damage = font_smaller.render('Урон', True, (255, 255, 255))
-                    text_protection = font_smaller.render('Защита', True, (255, 255, 255))
-                    text_dexterity = font_smaller.render('Ловкость', True, (255, 255, 255))
+                    text_health_w = font_smaller.render('Здоровье 100', True, (255, 255, 255))
+                    text_damage_w = font_smaller.render('Урон 10', True, (255, 255, 255))
+                    text_protection_w = font_smaller.render('Защита 1', True, (255, 255, 255))
+                    text_dexterity_w = font_smaller.render('Ловкость 5%', True, (255, 255, 255))
+                    text_mana_w = font_smaller.render('Мана 150', True, (255, 255, 255))
+                    text_health_k = font_smaller.render('Здоровье 150', True, (255, 255, 255))
+                    text_damage_k = font_smaller.render('Урон 7', True, (255, 255, 255))
+                    text_protection_k = font_smaller.render('Защита 3', True, (255, 255, 255))
+                    text_dexterity_k = font_smaller.render('Ловкость 2%', True, (255, 255, 255))
                     text_complexity_normal = font.render('Нормальная', True, (255, 255, 255))
                     text_complexity_hard = font.render('Сложная', True, (255, 255, 255))
                     text_back = font_smaller.render('Вернуться назад -', True, (255, 255, 255))
@@ -651,6 +671,31 @@ while running:
                     text_hit = font_small.render('- Обычная атака', True, (255, 255, 255))
                     text_wasd = font.render('W, A, S, D', True, (255, 255, 255))
                     text_f = font.render('F', True, (255, 255, 255))
+                    text_r = font.render('R', True, (255, 255, 255))
+                    text_strong_hit = font_small.render('- Сильная атака(для мага)', True, (255, 255, 255))
+                    text_tab = font.render('Tab', True, (255, 255, 255))
+                    text_inventory = font_small.render('- Открыть инвентарь', True, (255, 255, 255))
+                    text_lkm = font.render('Lkm', True, (255, 255, 255))
+                    text_interaction = font_small.render('- Взаимодействие с предметами в инвентаре(перемещение)', True, (255, 255, 255))
+                    text_b_lkm = font.render('B+Lkm', True, (255, 255, 255))
+                    text_sell = font_small.render('- Продажа предметов из инвентаря', True, (255, 255, 255))
+                    text_z = font.render('Z', True, (255, 255, 255))
+                    text_regen_hp = font_small.render('- Регенерация здоровья', True, (255, 255, 255))
+                    text_x = font.render('X', True, (255, 255, 255))
+                    text_regen_mn = font_small.render('- Регенерация маны', True, (255, 255, 255))
+                    text_short_guide = font.render('Краткое Руководство по игре', True, (255, 255, 255))
+                    text_guide = font_small.render('"Ботл" - один из самых важных предметов,'
+                                                   f' ведь он позволяет вам восстановить ваше здоровье и ману(при игре\n'
+                                                   ' за волшебника). Заряды "Ботла" вы можете увидеть в левом верхнем углу'
+                                                   ' экрана(под полосами здоровья), и\n если они закончились,'
+                                                   ' то вы не сможете восстановить себе ни здоровье, ни ману.'
+                                                   ' Сделать это можно\n бесплатно, если подойти к торговцу, который'
+                                                   ' располагается рядом с местом вашего появления на карте. При\n '
+                                                   'открытии инвентаря рядом с торговцем также можно купить нужные вам '
+                                                   'предметы, необходимые для прохождения\n новых уровней. Для переходя '
+                                                   'на новый уровень вам необходимо отыскать проход, который'
+                                                   ' располагается где то\n на карте. Выживайте, побеждайте, фармитесь!'
+                                                   , True, (255, 255, 255))
 
         if flag_new_game:
             if event.type == pygame.MOUSEMOTION:
@@ -710,6 +755,8 @@ while running:
     all_sprites.draw(screen)
     all_sprites.update()
 
+    manager.draw_ui(screen)
+
     if flag_main:
         blit_main(result[0])
 
@@ -724,7 +771,6 @@ while running:
 
     motion_cursor(x_cursor, y_cursor)
 
-    manager.draw_ui(screen)
     pygame.display.update()
     clock.tick(120)
 con.close()
