@@ -3,26 +3,8 @@ import os
 import sys
 import random
 import math
-
-
-pygame.init()
-size = width, height = 1600, 900
-screen = pygame.display.set_mode(size)
-player_sprites = pygame.sprite.Group()
-mob_sprites = pygame.sprite.Group()
-all_sprites = pygame.sprite.Group()
-tiles_group = pygame.sprite.Group()
-tiles_market = pygame.sprite.Group()
-tiles_collide_group = pygame.sprite.Group()
-tiles_collide_exit = pygame.sprite.Group()
-attacks_sprites = pygame.sprite.Group()
-SPEED_SKELETON = 10
-SPEED_PLAYER = 50
-FPS = 15
-PLAYER_X, PLAYER_Y, MAX_HP_PLAYER, PLAYER_DAMAGE, PLAYER_DEFENSE, PLAYER_POTIONS_HP, PLAYER_POTIONS_MANA, MAX_MANA_PLAYER = 250, 250, 100, 50, 5, 3, 5, 200
-MAX_HP_MOB, MOB_DAMAGE, MOB_DEFENSE = 100, 20, 0
-sound1 = pygame.mixer.Sound('data/Knight/knight_attack.mp3')
-sound2 = pygame.mixer.Sound('data/Knight/knight_move.mp3')
+import sqlite3
+import menu.main_menu
 
 
 def load_image(name, colorkey=None):
@@ -41,12 +23,35 @@ def load_image(name, colorkey=None):
     return image
 
 
-tile_images = {
-    'wall': pygame.transform.scale(load_image('levels/cave_wall.png'), (150, 150)),
-    'empty': pygame.transform.scale(load_image('levels/cave_pol.png'), (150, 150)),
-    'exit': pygame.transform.scale(load_image('levels/cave.png'), (150, 150))
-}
-tile_width = tile_height = 150
+if menu.main_menu.flag_exit:
+    pygame.init()
+    size = width, height = 1600, 900
+    screen = pygame.display.set_mode(size)
+    player_sprites = pygame.sprite.Group()
+    mob_sprites = pygame.sprite.Group()
+    all_sprites = pygame.sprite.Group()
+    tiles_group = pygame.sprite.Group()
+    tiles_market = pygame.sprite.Group()
+    tiles_collide_group = pygame.sprite.Group()
+    tiles_collide_exit = pygame.sprite.Group()
+    attacks_sprites = pygame.sprite.Group()
+    SPEED_SKELETON = 10
+    SPEED_PLAYER = 50
+    FPS = 15
+    PLAYER_X, PLAYER_Y, MAX_HP_PLAYER, PLAYER_DAMAGE, PLAYER_DEFENSE, PLAYER_POTIONS_HP, PLAYER_POTIONS_MANA, MAX_MANA_PLAYER = 250, 250, 100, 50, 5, 3, 5, 200
+    MAX_HP_MOB, MOB_DAMAGE, MOB_DEFENSE = 100, 20, 0
+    sound1 = pygame.mixer.Sound('data/Knight/knight_attack.mp3')
+    sound2 = pygame.mixer.Sound('data/Knight/knight_move.mp3')
+
+    con = sqlite3.connect('forproject2.bd')
+    cursor = con.cursor()
+
+    tile_images = {
+        'wall': pygame.transform.scale(load_image('levels/cave_wall.png'), (150, 150)),
+        'empty': pygame.transform.scale(load_image('levels/cave_pol.png'), (150, 150)),
+        'exit': pygame.transform.scale(load_image('levels/cave.png'), (150, 150))
+    }
+    tile_width = tile_height = 150
 
 
 def load_level(filename):
@@ -707,53 +712,54 @@ class Camera:
         self.dy = -(target.rect.y + target.rect.h // 2 - height // 2)
 
 
-player_class = 1
-camera = Camera()
-player, x, y = generate_level(load_level('level1.txt'))
-running = True
-clock = pygame.time.Clock()
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-        if event.type == pygame.KEYDOWN:
-            player.attack(event)
-            player.use_health(event)
-    screen.fill((0, 0, 0))
-    camera.update(player)
-    for sprite in all_sprites:
-        camera.apply(sprite)
+if menu.main_menu.flag_exit:
+    player_class = 0 if cursor.execute("""SELECT rasa FROM Data""").fetchone()[0] == 'knight' else 1
+    camera = Camera()
+    player, x, y = generate_level(load_level('level1.txt'))
+    run_game = True
+    clock = pygame.time.Clock()
+    while run_game:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run_game = False
+            if event.type == pygame.KEYDOWN:
+                player.attack(event)
+                player.use_health(event)
+        screen.fill((0, 0, 0))
+        camera.update(player)
+        for sprite in all_sprites:
+            camera.apply(sprite)
 
-    all_sprites.draw(screen)
-    mob_sprites.draw(screen)
-    for i in mob_sprites:
-        if not i.attack_flag:
-            i.move()
-        i.health()
-        i.idle()
-        i.attack()
-        if i.death_flag:
-            i.dead()
+        all_sprites.draw(screen)
+        mob_sprites.draw(screen)
+        for i in mob_sprites:
+            if not i.attack_flag:
+                i.move()
+            i.health()
+            i.idle()
+            i.attack()
+            if i.death_flag:
+                i.dead()
 
-    player_sprites.draw(screen)
-    player.move()
-    player.action_attack()
-    player.health()
-    if player.death_flag:
-        player.dead()
+        player_sprites.draw(screen)
+        player.move()
+        player.action_attack()
+        player.health()
+        if player.death_flag:
+            player.dead()
 
-    if pygame.sprite.spritecollideany(player, tiles_collide_exit):
-        running = False
+        if pygame.sprite.spritecollideany(player, tiles_collide_exit):
+            run_game = False
 
-    if pygame.sprite.spritecollideany(player, tiles_market):
-        player.potions_hp = PLAYER_POTIONS_HP
-        player.potions_mana = PLAYER_POTIONS_MANA
-        player.hp = MAX_HP_PLAYER
-        player.mana = MAX_MANA_PLAYER
+        if pygame.sprite.spritecollideany(player, tiles_market):
+            player.potions_hp = PLAYER_POTIONS_HP
+            player.potions_mana = PLAYER_POTIONS_MANA
+            player.hp = MAX_HP_PLAYER
+            player.mana = MAX_MANA_PLAYER
 
-    attacks_sprites.update()
+        attacks_sprites.update()
 
-    clock.tick(FPS)
-    pygame.display.flip()
+        clock.tick(FPS)
+        pygame.display.flip()
 
 pygame.quit()

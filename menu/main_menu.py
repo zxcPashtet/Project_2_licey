@@ -528,7 +528,6 @@ rasa = None
 complexity = None
 running = True
 flag_new_game = False
-flag_play = False
 flag_settings = False
 flag_main = True
 flag_how_to_play = False
@@ -546,6 +545,7 @@ flag_change_sound_effects = False
 flag_rect_main_menu = False
 flag_rect_in_game = False
 flag_rect_effects = False
+flag_exit = False
 flag_choice_cursor = 'defoult_cursor.png'
 cap = cv2.VideoCapture('menu_video.mp4')
 success, img = cap.read()
@@ -699,6 +699,13 @@ while running:
                                                    ' располагается где то\n на карте. Выживайте, побеждайте, фармитесь!'
                                                    , True, (255, 255, 255))
 
+                if result != 0:
+                    if ((event.pos[0] >= ((width // 2) - (resume.get_width() // 2))) and
+                         (event.pos[0] <= ((width // 2) - (resume.get_width() // 2)) + resume.get_width()) and
+                         (event.pos[1] >= 610 and event.pos[1] <= 610 + resume.get_height())):
+                        running = False
+                        flag_exit = True
+
         if flag_new_game:
             if event.type == pygame.MOUSEMOTION:
                 motion_new_game(event)
@@ -714,6 +721,7 @@ while running:
                     if rasa is not None and complexity is not None and name_hero.split() != []:
                         text_error = font_smaller.render('', True, (255, 0, 0))
                         running = False
+                        flag_exit = True
                         sql_update_data = f"""Update Data set name = '{name_hero}',
                         rasa = '{rasa}',
                         complexity = '{complexity}',
