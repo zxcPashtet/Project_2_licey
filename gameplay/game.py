@@ -13,10 +13,11 @@ mob_sprites = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
 tiles_collide_group = pygame.sprite.Group()
+tiles_collide_exit = pygame.sprite.Group()
 attacks_sprites = pygame.sprite.Group()
 SPEED_SKELETON = 10
 SPEED_PLAYER = 50
-FPS = 10
+FPS = 15
 PLAYER_X, PLAYER_Y, MAX_HP_PLAYER, PLAYER_DAMAGE, PLAYER_DEFENSE, PLAYER_POTIONS_HP, PLAYER_POTIONS_MANA, MAX_MANA = 250, 250, 100, 50, 5, 3, 5, 200
 MAX_HP_MOB, MOB_DAMAGE, MOB_DEFENSE = 100, 20, 0
 
@@ -71,6 +72,14 @@ class Tile_collide(pygame.sprite.Sprite):
             tile_width * pos_x, tile_height * pos_y)
 
 
+class Tile_exit(pygame.sprite.Sprite):
+    def __init__(self, tile_type, pos_x, pos_y):
+        super().__init__(tiles_collide_exit, all_sprites)
+        self.image = tile_images[tile_type]
+        self.rect = self.image.get_rect().move(
+            tile_width * pos_x, tile_height * pos_y)
+
+
 def generate_level(level):
     new_player, x, y = None, None, None
     for y in range(len(level)):
@@ -81,7 +90,7 @@ def generate_level(level):
                 Tile_collide('wall', x, y)
             elif level[y][x] == '*':
                 Tile('empty', x, y)
-                Tile('exit', x, y)
+                Tile_exit('exit', x, y)
             elif level[y][x] == "@":
                 Tile('empty', x, y)
                 if player_class == 0:
@@ -169,23 +178,31 @@ class Knight(pygame.sprite.Sprite):
                 self.flag = True
                 self.rotate()
                 self.rect.x -= SPEED_PLAYER
+                if len(pygame.sprite.groupcollide(player_sprites, tiles_collide_group, False, False)) != 0:
+                    self.rect.x += SPEED_PLAYER
             elif keys[pygame.K_d]:
                 self.move_play = True
                 self.m()
                 self.flag = False
                 self.rect.x += SPEED_PLAYER
+                if len(pygame.sprite.groupcollide(player_sprites, tiles_collide_group, False, False)) != 0:
+                    self.rect.x -= SPEED_PLAYER
             elif keys[pygame.K_w]:
                 self.move_play = True
                 self.m()
                 if self.flag:
                     self.rotate()
                 self.rect.y -= SPEED_PLAYER
+                if len(pygame.sprite.groupcollide(player_sprites, tiles_collide_group, False, False)) != 0:
+                    self.rect.y += SPEED_PLAYER
             elif keys[pygame.K_s]:
                 self.move_play = True
                 self.m()
                 if self.flag:
                     self.rotate()
                 self.rect.y += SPEED_PLAYER
+                if len(pygame.sprite.groupcollide(player_sprites, tiles_collide_group, False, False)) != 0:
+                    self.rect.y -= SPEED_PLAYER
             else:
                 self.move_play = False
 
@@ -198,7 +215,7 @@ class Knight(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
 
     def use_health(self, event):
-        if event.key == pygame.K_z and self.potions_hp > 0:
+        if event.key == pygame.K_z and self.potions_hp > 0 and not self.death_flag:
             self.potions_hp -= 1
             self.hp = self.hp + 30
             if self.hp > self.max_hp:
@@ -273,9 +290,11 @@ class Mag(pygame.sprite.Sprite):
                     if self.attack_cur == 6 and self.flag_attack == 1:
                         bullet = Bullet(self.rect.centerx, self.rect.centery, self.flag, self.defolt_attack, self.animation_bullet[0], 'player')
                         attacks_sprites.add(bullet)
+                        all_sprites.add(bullet)
                     if self.attack_cur == 12 and self.flag_attack == 4:
                         bullet = Bullet(self.rect.centerx, self.rect.centery, self.flag, self.super_attack, self.animation_bullet[1], 'player')
                         attacks_sprites.add(bullet)
+                        all_sprites.add(bullet)
                 if self.flag:
                     self.rotate()
                 if not self.flag:
@@ -305,23 +324,31 @@ class Mag(pygame.sprite.Sprite):
                 self.flag = True
                 self.rotate()
                 self.rect.x -= SPEED_PLAYER
+                if len(pygame.sprite.groupcollide(player_sprites, tiles_collide_group, False, False)) != 0:
+                    self.rect.x += SPEED_PLAYER
             elif keys[pygame.K_d] and self.hod['right']:
                 self.move_play = True
                 self.m()
                 self.flag = False
                 self.rect.x += SPEED_PLAYER
+                if len(pygame.sprite.groupcollide(player_sprites, tiles_collide_group, False, False)) != 0:
+                    self.rect.x -= SPEED_PLAYER
             elif keys[pygame.K_w] and self.hod['up']:
                 self.move_play = True
                 self.m()
                 if self.flag:
                     self.rotate()
                 self.rect.y -= SPEED_PLAYER
+                if len(pygame.sprite.groupcollide(player_sprites, tiles_collide_group, False, False)) != 0:
+                    self.rect.y += SPEED_PLAYER
             elif keys[pygame.K_s] and self.hod['down']:
                 self.move_play = True
                 self.m()
                 if self.flag:
                     self.rotate()
                 self.rect.y += SPEED_PLAYER
+                if len(pygame.sprite.groupcollide(player_sprites, tiles_collide_group, False, False)) != 0:
+                    self.rect.y -= SPEED_PLAYER
             else:
                 self.move_play = False
 
@@ -334,12 +361,12 @@ class Mag(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
 
     def use_health(self, event):
-        if event.key == pygame.K_z and self.potions_hp > 0:
+        if event.key == pygame.K_z and self.potions_hp > 0 and not self.death_flag:
             self.potions_hp -= 1
             self.hp = self.hp + 30
             if self.hp > self.max_hp:
                 self.hp = self.max_hp
-        if event.key == pygame.K_x and self.potions_mana > 0:
+        if event.key == pygame.K_x and self.potions_mana > 0 and not self.death_flag:
             self.potions_mana -= 1
             self.mana = self.mana + 30
             if self.mana > self.max_mana:
@@ -374,6 +401,7 @@ class Mag(pygame.sprite.Sprite):
                 self.death_cur = self.death_cur + 1
             if self.death_cur == 3:
                 self.death_cur = 3
+
 
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, x, y, direction, attack, image, attackers):
@@ -469,6 +497,7 @@ class Warrior(pygame.sprite.Sprite):
             self.idle_flag = False
         else:
             self.move_play = True
+            self.attack_cur = 0
 
     def action_attack(self):
         self.move_play = False
@@ -586,6 +615,7 @@ class Archero(pygame.sprite.Sprite):
                 if self.attack_cur == 12:
                     bullet = Bullet(self.rect.centerx, self.rect.centery, self.flag, self.defolt_attack, self.arrow, 'mob')
                     attacks_sprites.add(bullet)
+                    all_sprites.add(bullet)
                 self.attack_cur = (self.attack_cur + 1) % 15
             if self.animation_list[2][3] and player.rect[0] < self.rect[0]:
                 self.rotate()
@@ -687,8 +717,10 @@ while running:
     if player.death_flag:
         player.dead()
 
+    if pygame.sprite.spritecollideany(player, tiles_collide_exit):
+        running = False
+
     attacks_sprites.update()
-    attacks_sprites.draw(screen)
 
     clock.tick(FPS)
     pygame.display.flip()
