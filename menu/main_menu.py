@@ -36,6 +36,9 @@ size = width, height = 1600, 900
 screen = pygame.display.set_mode(size)
 pygame.display.set_caption('Main_menu')
 
+con = sqlite3.connect('forproject2.bd')
+cursor = con.cursor()
+
 all_sprites = pygame.sprite.Group()
 
 manager = pygame_gui.UIManager((1600, 900))
@@ -45,17 +48,16 @@ screen.blit(image, (0, 0))
 
 pygame.mixer.music.load('music\main_menu.mp3')
 pygame.mixer.music.play(-1)
-pygame.mixer.music.set_volume(0.2)
+pygame.mixer.music.set_volume(float(cursor.execute("""SELECT sound_music_menu FROM Data""").fetchone()[0]))
 
 font = pygame.font.Font(load_font('Courier WGL4 Italic.otf'), 35)
 font_enlarged = pygame.font.Font(load_font('Courier WGL4 Italic.otf'), 45)
 font_smaller = pygame.font.Font(load_font('Courier WGL4 Italic.otf'), 20)
 font_small = pygame.font.Font(load_font('Courier WGL4 Italic.otf'), 25)
 
-con = sqlite3.connect('forproject2.bd')
-cursor = con.cursor()
-result = cursor.execute("""SELECT COUNT(*) FROM Data""").fetchone()
-if result[0] == 0:
+result = int(cursor.execute("""SELECT last_level FROM Data""").fetchone()[0])
+
+if result == 0:
     new_game = font.render('Начать новую игру', True, (255, 255, 255))
     screen.blit(new_game, (((width // 2) - (new_game.get_width() // 2)), 550))
     how_to_play = font.render('Как играть', True, (255, 255, 255))
@@ -516,9 +518,9 @@ clock = pygame.time.Clock()
 cout_knight = 0
 cout_wizard = 0
 name_hero = ''
-meaning_main = 0.2
-meaning_in_game = 0.5
-meaning_effects = 0.5
+meaning_main = float(cursor.execute("""SELECT sound_music_menu FROM Data""").fetchone()[0])
+meaning_in_game = float(cursor.execute("""SELECT sound_music_game FROM Data""").fetchone()[0])
+meaning_effects = float(cursor.execute("""SELECT sound_effects FROM Data""").fetchone()[0])
 last_x_sound_main_menu = 0
 last_x_sound_in_game = 0
 last_x_sound_effects = 0
@@ -558,14 +560,14 @@ while running:
 
         if flag_main:
             if event.type == pygame.MOUSEMOTION:
-                motion_main(result[0])
+                motion_main(result)
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if (((event.pos[0] >= ((width // 2) - (exit.get_width() // 2)) and
                         event.pos[0] <= ((width // 2) - (exit.get_width() // 2)) + exit.get_width()) and
-                        (event.pos[1] >= 730 and event.pos[1] <= 730 + exit.get_height()) and result[0] == 0) or
+                        (event.pos[1] >= 730 and event.pos[1] <= 730 + exit.get_height()) and result == 0) or
                         ((event.pos[0] >= ((width // 2) - (exit.get_width() // 2)) and
                           event.pos[0] <= ((width // 2) - (exit.get_width() // 2)) + exit.get_width()) and
-                         (event.pos[1] >= 780 and event.pos[1] <= 780 + exit.get_height()) and result[0] != 0)):
+                         (event.pos[1] >= 780 and event.pos[1] <= 780 + exit.get_height()) and result != 0)):
                     running = False
                 if ((event.pos[0] >= ((width // 2) - (new_game.get_width() // 2)) and
                     event.pos[0] <= ((width // 2) - (new_game.get_width() // 2)) + new_game.get_width()) and
@@ -606,10 +608,10 @@ while running:
 
                 if (((event.pos[0] >= ((width // 2) - (settings.get_width() // 2))) and
                      (event.pos[0] <= ((width // 2) - (settings.get_width() // 2)) + settings.get_width()) and
-                      (event.pos[1] >= 670 and event.pos[1] <= 670 + settings.get_height()) and result[0] == 0) or
+                      (event.pos[1] >= 670 and event.pos[1] <= 670 + settings.get_height()) and result == 0) or
                         ((event.pos[0] >= ((width // 2) - (settings.get_width() // 2))) and
                          (event.pos[0] <= ((width // 2) - (settings.get_width() // 2)) + settings.get_width()) and
-                          (event.pos[1] >= 730 and event.pos[1] <= 730 + settings.get_height()) and result[0] != 0)):
+                          (event.pos[1] >= 730 and event.pos[1] <= 730 + settings.get_height()) and result != 0)):
                     flag_main = False
                     flag_settings = True
                     esc = pygame.transform.scale(load_image('esc_white.png'), (75, 75))
@@ -658,10 +660,10 @@ while running:
 
                 if (((event.pos[0] >= ((width // 2) - (how_to_play.get_width() // 2))) and
                      (event.pos[0] <= ((width // 2) - (how_to_play.get_width() // 2)) + how_to_play.get_width()) and
-                        (event.pos[1] >= 610 and event.pos[1] <= 610 + how_to_play.get_height()) and result[0] == 0) or
+                        (event.pos[1] >= 610 and event.pos[1] <= 610 + how_to_play.get_height()) and result == 0) or
                         ((event.pos[0] >= ((width // 2) - (how_to_play.get_width() // 2))) and
                          (event.pos[0] <= ((width // 2) - (how_to_play.get_width() // 2)) + how_to_play.get_width()) and
-                         (event.pos[1] >= 670 and event.pos[1] <= 670 + how_to_play.get_height()) and result[0] != 0)):
+                         (event.pos[1] >= 670 and event.pos[1] <= 670 + how_to_play.get_height()) and result != 0)):
                     flag_main = False
                     flag_how_to_play = True
                     esc = pygame.transform.scale(load_image('esc_white.png'), (75, 75))
@@ -712,6 +714,17 @@ while running:
                     if rasa is not None and complexity is not None and name_hero.split() != []:
                         text_error = font_smaller.render('', True, (255, 0, 0))
                         running = False
+                        sql_update_data = f"""Update Data set name = '{name_hero}',
+                        rasa = '{rasa}',
+                        complexity = '{complexity}',
+                        last_level = '1',
+                        inventory = '{' '.join(["None", "None", "None", "None", "None",
+                                                "None", "None", "None", "None", "None",
+                                                "None", "None", "None", "None", "None",
+                                                "None", "None", "None", "None", "None",])}', 
+                        equipment = '{' '.join(["None", "None", "None", "None", "None"])}'"""
+                        cursor.execute(sql_update_data)
+                        con.commit()
                     else:
                         if complexity is None:
                             text_error = font_smaller.render('Выберите сложность игры', True,
@@ -759,7 +772,7 @@ while running:
     manager.draw_ui(screen)
 
     if flag_main:
-        blit_main(result[0])
+        blit_main(result)
 
     if flag_new_game:
         blit_new_game(flag_rect1, flag_rect2, screen)
@@ -774,5 +787,13 @@ while running:
 
     pygame.display.update()
     clock.tick(120)
+
+sql_update_data = f"""Update Data set sound_music_menu = '{meaning_main}',
+sound_music_game = '{meaning_in_game}',
+sound_effects = '{meaning_effects}'"""
+cursor.execute(sql_update_data)
+con.commit()
+cursor.close()
 con.close()
+
 pygame.quit()
