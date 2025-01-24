@@ -38,10 +38,15 @@ if menu.main_menu.flag_exit:
     SPEED_SKELETON = 10
     SPEED_PLAYER = 50
     FPS = 15
-    PLAYER_X, PLAYER_Y, MAX_HP_PLAYER, PLAYER_DAMAGE, PLAYER_DEFENSE, PLAYER_POTIONS_HP, PLAYER_POTIONS_MANA, MAX_MANA_PLAYER = 250, 250, 100, 50, 5, 3, 5, 200
+    PLAYER_X, PLAYER_Y, MAX_HP_PLAYER, PLAYER_DAMAGE, PLAYER_DEFENSE, PLAYER_POTIONS_HP, PLAYER_POTIONS_MANA, MAX_MANA_PLAYER, KNIGHT_CRIT, DEXTERITY = 250, 250, 100, 50, 5, 3, 5, 200, 50, 50
     MAX_HP_MOB, MOB_DAMAGE, MOB_DEFENSE = 100, 20, 0
-    sound1 = pygame.mixer.Sound('data/Knight/knight_attack.mp3')
-    sound2 = pygame.mixer.Sound('data/Knight/knight_move.mp3')
+    sound_knight_attack = pygame.mixer.Sound('data/Knight/knight_attack.mp3')
+    sound_knight_walk = pygame.mixer.Sound('data/Knight/knight_move.mp3')
+
+    sound_warrior_attack = pygame.mixer.Sound('data/Skeleton_warrior/warrior_attack.mp3')
+    sound_skeleton_walk = pygame.mixer.Sound('data/Skeleton_warrior/warrior_walk.mp3')
+    sound_skeleton_death = pygame.mixer.Sound('data/Skeleton_warrior/warrior_death.mp3')
+    sound_archero_attack = pygame.mixer.Sound('data/Skeleton_archero/archero_attack.mp3')
 
     con = sqlite3.connect('forproject2.bd')
     cursor = con.cursor()
@@ -109,9 +114,9 @@ def generate_level(level):
             elif level[y][x] == "@":
                 Tile('empty', x, y)
                 if player_class == 0:
-                    new_player = Knight(x, y, MAX_HP_PLAYER, PLAYER_DAMAGE, PLAYER_DEFENSE, PLAYER_POTIONS_HP)
+                    new_player = Knight(x, y, MAX_HP_PLAYER, PLAYER_DAMAGE, PLAYER_DEFENSE, PLAYER_POTIONS_HP, KNIGHT_CRIT, DEXTERITY)
                 else:
-                    new_player = Mag(x, y, MAX_HP_PLAYER, PLAYER_DAMAGE, PLAYER_DEFENSE, PLAYER_POTIONS_HP, PLAYER_POTIONS_MANA, MAX_MANA_PLAYER)
+                    new_player = Mag(x, y, MAX_HP_PLAYER, PLAYER_DAMAGE, PLAYER_DEFENSE, PLAYER_POTIONS_HP, PLAYER_POTIONS_MANA, MAX_MANA_PLAYER, DEXTERITY)
             elif level[y][x] == "$":
                 Tile('empty', x, y)
                 Warrior(x, y, MAX_HP_MOB, MOB_DAMAGE, MOB_DEFENSE)
@@ -122,7 +127,7 @@ def generate_level(level):
 
 
 class Knight(pygame.sprite.Sprite):
-    def __init__(self, x, y, max_hp, damage, defense, potions_hp):
+    def __init__(self, x, y, max_hp, damage, defense, potions_hp, crit, dexterity):
         super().__init__(player_sprites, all_sprites)
         self.animation_list = []
         self.animation_list.append([pygame.transform.scale(load_image(f"Knight/walk/walk{i}.png"), (200, 130)) for i in range(1, 9)])
@@ -136,7 +141,8 @@ class Knight(pygame.sprite.Sprite):
         self.flag, self.move_play, self.death_flag = False, False, False
         self.flag_attack = 0
         self.potions_hp = potions_hp
-        self.damage, self.hp, self.defense, self.max_hp, self.crit = damage, max_hp, defense, max_hp, 5
+        self.damage, self.hp, self.defense, self.max_hp, self.crit, self.dexterity = damage, max_hp, defense, max_hp, crit, dexterity
+        self.move_cooldown = 5
 
     def attack(self, event):
         if event.key == pygame.K_f:
@@ -153,16 +159,16 @@ class Knight(pygame.sprite.Sprite):
                     if self.attack_cur == len(self.animation_list[self.flag_attack]) - 1:
                         for i in mob_sprites:
                             if pygame.sprite.collide_mask(self, i):
-                                if random.randrange(1, 400) / 4 <= self.crit:
-                                    i.hp = i.hp - ((self.damage + (self.damage // 100) * self.crit) - i.defense)
+                                if random.randrange(1, 400) >= 0 and random.randrange(1, 400) <= 0 + self.crit * 4:
+                                    i.hp = i.hp - ((self.damage + random.randrange(50, 200) / 100 * self.damage) - i.defense)
                                 else:
                                     i.hp = i.hp - (self.damage - i.defense)
                                 if i.hp <= 0:
                                     i.death_flag = True
                                     i.hp = 0
-                    self.attack_cur = (self.attack_cur + 1)
                     if self.attack_cur == 4:
-                        sound1.play()
+                        sound_knight_attack.play()
+                    self.attack_cur = (self.attack_cur + 1)
                 if self.flag:
                     self.rotate()
                 if not self.flag:
@@ -170,7 +176,6 @@ class Knight(pygame.sprite.Sprite):
                 if self.attack_cur == 5:
                     self.flag_attack = 0
                     self.attack_cur = 0
-                    sound1.stop()
             elif not self.move_play:
                 self.attack_cur = 0
                 self.idle()
@@ -192,6 +197,7 @@ class Knight(pygame.sprite.Sprite):
                 self.m()
                 self.flag = True
                 self.rotate()
+                self.sound_walk()
                 self.rect.x -= SPEED_PLAYER
                 if len(pygame.sprite.groupcollide(player_sprites, tiles_collide_group, False, False)) != 0:
                     self.rect.x += SPEED_PLAYER
@@ -199,6 +205,7 @@ class Knight(pygame.sprite.Sprite):
                 self.move_play = True
                 self.m()
                 self.flag = False
+                self.sound_walk()
                 self.rect.x += SPEED_PLAYER
                 if len(pygame.sprite.groupcollide(player_sprites, tiles_collide_group, False, False)) != 0:
                     self.rect.x -= SPEED_PLAYER
@@ -207,6 +214,7 @@ class Knight(pygame.sprite.Sprite):
                 self.m()
                 if self.flag:
                     self.rotate()
+                self.sound_walk()
                 self.rect.y -= SPEED_PLAYER
                 if len(pygame.sprite.groupcollide(player_sprites, tiles_collide_group, False, False)) != 0:
                     self.rect.y += SPEED_PLAYER
@@ -215,11 +223,19 @@ class Knight(pygame.sprite.Sprite):
                 self.m()
                 if self.flag:
                     self.rotate()
+                self.sound_walk()
                 self.rect.y += SPEED_PLAYER
                 if len(pygame.sprite.groupcollide(player_sprites, tiles_collide_group, False, False)) != 0:
                     self.rect.y -= SPEED_PLAYER
             else:
+                sound_knight_walk.stop()
                 self.move_play = False
+
+    def sound_walk(self):
+        if self.move_cooldown == 0:
+            sound_knight_walk.play()
+        elif self.move_cooldown < 0:
+            self.move_cooldown = 5
 
     def m(self):
         self.image = self.animation_list[0][self.move_cur]
@@ -259,7 +275,7 @@ class Knight(pygame.sprite.Sprite):
 
 
 class Mag(pygame.sprite.Sprite):
-    def __init__(self, x, y, max_hp, damage, defense, potions_hp, potions_mana, max_mana):
+    def __init__(self, x, y, max_hp, damage, defense, potions_hp, potions_mana, max_mana, dexterity):
         super().__init__(player_sprites, all_sprites)
         self.animation_list = []
         self.animation_list.append([pygame.transform.scale(load_image(f"Mag/mag_walk/{i}.png"), (200, 130)) for i in range(1, 8)])
@@ -278,7 +294,7 @@ class Mag(pygame.sprite.Sprite):
         self.rect = self.image.get_rect().move(13 + x * tile_width, 5 + y * tile_height)
         self.flag, self.move_play, self.death_flag, self.shot = False, False, False, False
         self.flag_attack = 0
-        self.damage, self.hp, self.defense, self.max_hp, self.mana, self.max_mana = damage, max_hp, defense, max_hp, max_mana, max_mana
+        self.damage, self.hp, self.defense, self.max_hp, self.mana, self.max_mana, self.dexterity = damage, max_hp, defense, max_hp, max_mana, max_mana, dexterity
         self.shoot_cooldown = 0
         self.new_action = True
         self.defolt_attack, self.super_attack = 10, 30
@@ -469,7 +485,8 @@ class Bullet(pygame.sprite.Sprite):
             if pygame.sprite.spritecollide(player, attacks_sprites, False):
                 if not player.death_flag:
                     self.kill()
-                    player.hp -= self.attack
+                    if not (random.randrange(1, 400) >= 0 and random.randrange(1, 400) <= 0 + player.dexterity * 4):
+                        player.hp -= self.attack
         else:
             for i in mob_sprites:
                 if pygame.sprite.spritecollide(i, attacks_sprites, False):
@@ -497,6 +514,7 @@ class Warrior(pygame.sprite.Sprite):
         self.rect = self.image.get_rect().move(13 + x * tile_width, 5 + y * tile_height)
         self.mask = pygame.mask.from_surface(self.animation_list[2][3])
         self.death_flag, self.attack_flag, self.move_play, self.idle_flag = False, 0, False, True
+        self.move_cooldown = 10
 
     def idle(self):
         if self.idle_flag:
@@ -519,18 +537,21 @@ class Warrior(pygame.sprite.Sprite):
 
     def action_attack(self):
         self.move_play = False
-        attack_cooldown = 125
+        attack_cooldown = 150
         if not self.death_flag:
             self.image = self.animation_list[2][self.attack_cur]
             if pygame.time.get_ticks() - self.update_time > attack_cooldown:
                 self.update_time = pygame.time.get_ticks()
                 if self.attack_cur == len(self.animation_list[2]) - 1:
                     if pygame.sprite.collide_mask(self, player):
-                        player.hp = player.hp - (self.damage - player.defense)
+                        if not (random.randrange(1, 400) >= 0 and random.randrange(1, 400) <= 0 + player.dexterity * 4):
+                            player.hp = player.hp - (self.damage - player.defense)
                         if player.hp <= 0:
                             player.death_flag = True
                             player.hp = 0
                 self.attack_cur = (self.attack_cur + 1) % 4
+                if self.attack_cur == 2:
+                    sound_warrior_attack.play()
             if self.animation_list[2][3] and player.rect[0] < self.rect[0]:
                 self.rotate()
                 self.mask = pygame.mask.from_surface(self.image)
@@ -544,21 +565,25 @@ class Warrior(pygame.sprite.Sprite):
                 self.idle_flag = False
                 if player.rect[0] > self.rect[0]:
                     self.m()
+                    self.sound_walk()
                     self.rect.x += SPEED_SKELETON
                     if len(pygame.sprite.groupcollide(mob_sprites, tiles_collide_group, False, False)) != 0:
                         self.rect.x -= SPEED_SKELETON
                 if player.rect[0] < self.rect[0]:
                     self.m()
+                    self.sound_walk()
                     self.rect.x -= SPEED_SKELETON
                     if len(pygame.sprite.groupcollide(mob_sprites, tiles_collide_group, False, False)) != 0:
                         self.rect.x += SPEED_SKELETON
                 if player.rect[1] > self.rect[1]:
                     self.m()
+                    self.sound_walk()
                     self.rect.y += SPEED_SKELETON
                     if len(pygame.sprite.groupcollide(mob_sprites, tiles_collide_group, False, False)) != 0:
                         self.rect.y -= SPEED_SKELETON
                 if player.rect[1] < self.rect[1]:
                     self.m()
+                    self.sound_walk()
                     self.rect.y -= SPEED_SKELETON
                     if len(pygame.sprite.groupcollide(mob_sprites, tiles_collide_group, False, False)) != 0:
                         self.rect.y += SPEED_SKELETON
@@ -567,6 +592,12 @@ class Warrior(pygame.sprite.Sprite):
             else:
                 self.idle_flag = True
 
+    def sound_walk(self):
+        if self.move_cooldown == 0:
+            sound_skeleton_walk.play()
+        elif self.move_cooldown < 0:
+            self.move_cooldown = 15
+
     def dead(self):
         self.idle_flag = False
         attack_cooldown = 125
@@ -574,6 +605,8 @@ class Warrior(pygame.sprite.Sprite):
             self.image = self.animation_list[3][self.death_cur]
             if pygame.time.get_ticks() - self.update_time > attack_cooldown and self.death_cur != 3:
                 self.update_time = pygame.time.get_ticks()
+                if self.death_cur == 0:
+                    sound_skeleton_death.play()
                 self.death_cur = (self.death_cur + 1)
             if self.death_cur == 3:
                 self.death_cur = 3
@@ -612,6 +645,7 @@ class Archero(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
         self.death_flag, self.attack_flag, self.move_play, self.idle_flag, self.flag = False, 0, False, True, False
         self.defolt_attack = damage
+        self.move_cooldown = 10
 
     def idle(self):
         if self.idle_flag:
@@ -642,6 +676,7 @@ class Archero(pygame.sprite.Sprite):
                     bullet = Bullet(self.rect.centerx, self.rect.centery, self.flag, self.defolt_attack, self.arrow, 'mob')
                     attacks_sprites.add(bullet)
                     all_sprites.add(bullet)
+                    sound_archero_attack.play()
                 self.attack_cur = (self.attack_cur + 1) % 15
             if player.rect[0] > self.rect[0]:
                 self.flag = False
@@ -656,11 +691,13 @@ class Archero(pygame.sprite.Sprite):
                 self.idle_flag = False
                 if player.rect[1] > self.rect[1]:
                     self.m()
+                    self.sound_walk()
                     self.rect.y += SPEED_SKELETON
                     if len(pygame.sprite.groupcollide(mob_sprites, tiles_collide_group, False, False)) != 0:
                         self.rect.y -= SPEED_SKELETON
                 if player.rect[1] < self.rect[1]:
                     self.m()
+                    self.sound_walk()
                     self.rect.y -= SPEED_SKELETON
                     if len(pygame.sprite.groupcollide(mob_sprites, tiles_collide_group, False, False)) != 0:
                         self.rect.y += SPEED_SKELETON
@@ -672,6 +709,12 @@ class Archero(pygame.sprite.Sprite):
                 if player.rect[1] == self.rect[1]:
                     self.idle_flag = True
 
+    def sound_walk(self):
+        if self.move_cooldown == 0:
+            sound_skeleton_walk.play()
+        elif self.move_cooldown < 0:
+            self.move_cooldown = 10
+
     def dead(self):
         self.idle_flag = False
         attack_cooldown = 125
@@ -679,6 +722,8 @@ class Archero(pygame.sprite.Sprite):
             self.image = self.animation_list[3][self.death_cur]
             if pygame.time.get_ticks() - self.update_time > attack_cooldown and self.death_cur != 4:
                 self.update_time = pygame.time.get_ticks()
+                if self.death_cur == 0:
+                    sound_skeleton_death.play()
                 self.death_cur = (self.death_cur + 1)
             if self.death_cur == 4:
                 self.death_cur = 4
@@ -735,6 +780,7 @@ if menu.main_menu.flag_exit:
         for i in mob_sprites:
             if not i.attack_flag:
                 i.move()
+                i.move_cooldown -= 1
             i.health()
             i.idle()
             i.attack()
@@ -743,6 +789,7 @@ if menu.main_menu.flag_exit:
 
         player_sprites.draw(screen)
         player.move()
+        player.move_cooldown -= 1
         player.action_attack()
         player.health()
         if player.death_flag:
