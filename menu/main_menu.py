@@ -730,7 +730,8 @@ while running:
                                                 "None", "None", "None", "None", "None",
                                                 "None", "None", "None", "None", "None",
                                                 "None", "None", "None", "None", "None",])}', 
-                        equipment = '{' '.join(["None", "None", "None", "None", "None"])}'"""
+                        equipment = '{' '.join(["None", "None", "None", "None", "None"])}',
+                        money = '0'"""
                         cursor.execute(sql_update_data)
                         con.commit()
                     else:

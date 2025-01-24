@@ -4,9 +4,25 @@ import sys
 import sqlite3
 
 
+def load_font(name):
+    fullname = os.path.join('Fonts', name)
+    if not os.path.isfile(fullname):
+        print(f"Файл со шрифтом '{fullname}' не найден")
+        sys.exit()
+    font = fullname
+    return font
+
+
 pygame.init()
 size = width, height = 1600, 900
 screen = pygame.display.set_mode(size)
+
+font = pygame.font.Font(load_font('Courier WGL4 Italic.otf'), 35)
+font_small = pygame.font.Font(load_font('Courier WGL4 Italic.otf'), 25)
+font_smaller = pygame.font.Font(load_font('Courier WGL4 Italic.otf'), 20)
+
+sound_buy_sell = pygame.mixer.Sound(os.path.join('sound', 'buy_1.mp3'))
+sound_buy_sell.set_volume(0.1)
 
 
 def load_image(name, colorkey=None):
@@ -24,22 +40,6 @@ def load_image(name, colorkey=None):
         image = image.convert_alpha()
     return image
 
-
-def load_font(name):
-    fullname = os.path.join('Fonts', name)
-    if not os.path.isfile(fullname):
-        print(f"Файл со шрифтом '{fullname}' не найден")
-        sys.exit()
-    font = fullname
-    return font
-
-
-font = pygame.font.Font(load_font('Courier WGL4 Italic.otf'), 35)
-font_small = pygame.font.Font(load_font('Courier WGL4 Italic.otf'), 25)
-font_smaller = pygame.font.Font(load_font('Courier WGL4 Italic.otf'), 20)
-
-sound_buy_sell = pygame.mixer.Sound(os.path.join('sound', 'buy_1.mp3'))
-sound_buy_sell.set_volume(0.1)
 
 class Inventory:
     def __init__(self, width, height):
@@ -496,11 +496,11 @@ click = False
 flag_B = False
 flag_bench = True
 cell = int()
-running = True
-while running:
+run_invent = True
+while run_invent:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            running = False
+            run_invent = False
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_b:
                 flag_B = True
