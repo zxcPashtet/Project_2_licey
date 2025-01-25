@@ -320,22 +320,22 @@ def blit_settings():
     screen.blit(text_meaning_sounds_in_game, (505, 187))
     screen.blit(text_meaning_sounds_effects, (505, 267))
     screen.blit(text_choice_cursor, (width // 2 - text_choice_cursor.get_width() // 2, 340))
-    if flag_choice_cursor != 'defoult_cursor.png':
+    if flag_choice_cursor != 'defoult_cursor':
         rect_cursor_defoult = pygame.draw.rect(screen, (255, 255, 255),
                                                (width // 2 - 50, 415, 100, 100), 5)
-    elif flag_choice_cursor == 'defoult_cursor.png':
+    elif flag_choice_cursor == 'defoult_cursor':
         rect_cursor_defoult = pygame.draw.rect(screen, (255, 255, 0),
                                                (width // 2 - 50, 415, 100, 100), 5)
-    if flag_choice_cursor != 'sword.gif':
+    if flag_choice_cursor != 'sword':
         rect_cursor_sword = pygame.draw.rect(screen, (255, 255, 255),
                                              (width // 2 - 200, 415, 100, 100), 5)
-    elif flag_choice_cursor == 'sword.gif':
+    elif flag_choice_cursor == 'sword':
         rect_cursor_sword = pygame.draw.rect(screen, (255, 255, 0),
                                              (width // 2 - 200, 415, 100, 100), 5)
-    if flag_choice_cursor != 'stick.png':
+    if flag_choice_cursor != 'stick':
         rect_cursor_stick = pygame.draw.rect(screen, (255, 255, 255),
                                              (width // 2 + 100, 415, 100, 100), 5)
-    elif flag_choice_cursor == 'stick.png':
+    elif flag_choice_cursor == 'stick':
         rect_cursor_stick = pygame.draw.rect(screen, (255, 255, 0),
                                              (width // 2 + 100, 415, 100, 100), 5)
     screen.blit(img_cursor_defoult, (width // 2 - 25, 440))
@@ -372,12 +372,15 @@ def down_settings(event):
     text_meaning_sounds_effects = font_small.render(str(abs(round(meaning_effects, 1))) + ' -', True,
                                                     (255, 255, 255))
     if ((event.pos[0] >= 750 and event.pos[0] <= 850) and (event.pos[1] >= 415 and event.pos[1] <= 515)):
-        flag_choice_cursor = 'defoult_cursor.png'
+        flag_choice_cursor = 'defoult_cursor'
         pygame.mouse.set_visible(True)
     if ((event.pos[0] >= 600 and event.pos[0] <= 700) and (event.pos[1] >= 415 and event.pos[1] <= 515)):
-        flag_choice_cursor = 'sword.gif'
+        flag_choice_cursor = 'sword'
     if ((event.pos[0] >= 900 and event.pos[0] <= 1000) and (event.pos[1] >= 415 and event.pos[1] <= 515)):
-        flag_choice_cursor = 'stick.png'
+        flag_choice_cursor = 'stick'
+    sql_update_data = f"""Update Data set cursor = '{flag_choice_cursor}'"""
+    cursor.execute(sql_update_data)
+    con.commit()
 
 
 def motion_settings(event):
@@ -504,13 +507,13 @@ def motion_cursor(x, y):
     if pygame.mouse.get_focused():
         if flag_choice_cursor == 'defoult_cursor':
             pass
-        if flag_choice_cursor == 'sword.gif':
+        if flag_choice_cursor == 'sword':
             pygame.mouse.set_visible(False)
-            image = pygame.transform.scale(load_image(flag_choice_cursor), (34, 34))
+            image = pygame.transform.scale(load_image(flag_choice_cursor + '.gif'), (34, 34))
             screen.blit(image, (x, y))
-        if flag_choice_cursor == 'stick.png':
+        if flag_choice_cursor == 'stick':
             pygame.mouse.set_visible(False)
-            image = pygame.transform.scale(load_image(flag_choice_cursor), (34, 42))
+            image = pygame.transform.scale(load_image(flag_choice_cursor + '.png'), (34, 42))
             screen.blit(image, (x, y))
 
 
@@ -546,7 +549,9 @@ flag_rect_main_menu = False
 flag_rect_in_game = False
 flag_rect_effects = False
 flag_exit = False
-flag_choice_cursor = 'defoult_cursor.png'
+x_cursor = -1000
+y_cursor = -1000
+flag_choice_cursor = cursor.execute("""SELECT cursor FROM Data""").fetchone()[0]
 cap = cv2.VideoCapture('menu_video.mp4')
 success, img = cap.read()
 shape = (1600, 900)

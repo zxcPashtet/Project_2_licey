@@ -75,6 +75,19 @@ if menu.main_menu.flag_exit:
     sound_skeleton_death = pygame.mixer.Sound('data/Skeleton_warrior/warrior_death.mp3')
     sound_archero_attack = pygame.mixer.Sound('data/Skeleton_archero/archero_attack.mp3')
 
+    playlist = ['One_DINAMO.mp3', 'Five_DINAMO.mp3', 'One_RPG.mp3', 'Four_DINAMO.mp3']
+    current_song = 1
+
+    music = pygame.mixer.music.load('music/One_DINAMO.mp3')
+    pygame.mixer.music.play(1)
+    pygame.mixer.music.set_volume(float(cursor.execute("""SELECT sound_music_game FROM Data""").fetchone()[0]))
+
+    END_MUSIC = pygame.USEREVENT + 1
+    my_event = pygame.mixer.music.set_endevent(END_MUSIC)
+
+    #event_music_end = pygame.event.Event(pygame.mixer.music.set_endevent)
+    #pygame.mixer.music.set_endevent(pygame.MUSIC_END)
+
     tile_images = {
         'wall': pygame.transform.scale(load_image('levels/cave_wall.png'), (150, 150)),
         'empty': pygame.transform.scale(load_image('levels/cave_pol.png'), (150, 150)),
@@ -90,7 +103,6 @@ if menu.main_menu.flag_exit:
     sound_buy_sell.set_volume(0.1)
 
     gold = 0
-
 
 
 def load_level(filename):
@@ -1245,6 +1257,20 @@ class Bench:
         #self.con.close()
 
 
+def motion_cursor(x, y):
+    if pygame.mouse.get_focused():
+        if flag_choice_cursor == 'defoult_cursor':
+            pass
+        if flag_choice_cursor == 'sword':
+            pygame.mouse.set_visible(False)
+            image = pygame.transform.scale(load_image_inventory(flag_choice_cursor + '.gif'), (34, 34))
+            screen.blit(image, (x, y))
+        if flag_choice_cursor == 'stick':
+            pygame.mouse.set_visible(False)
+            image = pygame.transform.scale(load_image_inventory(flag_choice_cursor + '.png'), (34, 42))
+            screen.blit(image, (x, y))
+
+
 
 
 if menu.main_menu.flag_exit:
@@ -1262,11 +1288,21 @@ if menu.main_menu.flag_exit:
     flag_B = False
     flag_bench = True
     cell = int()
+    x_cursor = -1000
+    y_cursor = -1000
+    flag_choice_cursor = menu.main_menu.flag_choice_cursor
 
     while run_game:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run_game = False
+            if event.type == END_MUSIC:
+                print(1)
+                pygame.mixer.music.load('music/Five_DINAMO.mp3')
+                pygame.mixer.music.play(1)
+            if event.type == pygame.MOUSEMOTION:
+                x_cursor = event.pos[0]
+                y_cursor = event.pos[1]
             if event.type == pygame.KEYDOWN:
                 player.attack(event)
                 player.use_health(event)
@@ -1349,15 +1385,18 @@ if menu.main_menu.flag_exit:
             board_inv.get_motion(x_motion, y_motion)
             pygame.display.flip()
 
+        motion_cursor(x_cursor, y_cursor)
+
         clock.tick(FPS)
         pygame.display.flip()
 
-sql_update_query = f"""Update Data set money = '{gold}'"""
-cursor.execute(sql_update_query)
-con.commit()
+    sql_update_query = f"""Update Data set money = '{gold}'"""
+    cursor.execute(sql_update_query)
+    con.commit()
+
 cursor.close()
 con.close()
 
-#board_inv.completion()d
+#board_inv.completion()
 #board_equ.completion()
 pygame.quit()
