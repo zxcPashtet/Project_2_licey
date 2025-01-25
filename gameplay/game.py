@@ -823,6 +823,7 @@ class Inventory:
         gold += int(self.cursor.execute("""SELECT money FROM Data""").fetchone()[0])
         self.click = False
         self.image_showing_characteristics = 'None'
+        self.portable = 'None'
         self.width = width
         self.height = height
         self.board = [[0] * width for i in range(height)]
@@ -953,6 +954,7 @@ class Inventory:
                     temp = tab_equipment[self.cell[0]]
                     tab_equipment[self.cell[0]] = self.portable
                     tab_inventory[self.position] = temp
+            self.portable = 'None'
 
 
 
@@ -985,6 +987,7 @@ class Equipment:
         self.cursor = self.con.cursor()
         self.click = False
         self.image_showing_characteristics = 'None'
+        self.portable = 'None'
         self.width = width
         self.height = height
         self.board = [[0] * width for i in range(height)]
@@ -1103,6 +1106,7 @@ class Equipment:
                     temp = tab_inventory[(self.cell[0] + (5 * self.cell[1] + 1)) - 1]
                     tab_inventory[(self.cell[0] + (5 * self.cell[1] + 1)) - 1] = self.portable
                     tab_equipment[self.position] = temp
+            self.portable = 'None'
 
 
     def get_motion(self, x, y):
@@ -1309,6 +1313,12 @@ if menu.main_menu.flag_exit:
                 if event.key == pygame.K_TAB:
                     if run_invent:
                         run_invent = False
+                        if board_equ.portable != 'None':
+                            tab_equipment[board_equ.position] = board_equ.portable
+                            board_equ.portable = 'None'
+                        if board_inv.portable != 'None':
+                            tab_inventory[board_inv.position] = board_inv.portable
+                            board_inv.portable = 'None'
                         sql_update_query = f"""Update Data set inventory = '{' '.join(tab_inventory)}',
                         equipment = '{' '.join(tab_equipment)}',
                         money = '{gold}'"""
@@ -1373,6 +1383,9 @@ if menu.main_menu.flag_exit:
             player.potions_mana = PLAYER_POTIONS_MANA
             player.hp = MAX_HP_PLAYER
             player.mana = MAX_MANA_PLAYER
+            flag_bench = True
+        else:
+            flag_bench = False
 
         attacks_sprites.update()
 
