@@ -7,6 +7,10 @@ import sqlite3
 import menu.main_menu
 
 
+con = sqlite3.connect('forproject2.bd')
+cursor = con.cursor()
+
+
 def load_image(name, colorkey=None):
     fullname = os.path.join('data', name)
     if not os.path.isfile(fullname):
@@ -47,8 +51,18 @@ def load_font(name):
     font = fullname
     return font
 
-con = sqlite3.connect('forproject2.bd')
-cursor = con.cursor()
+
+def reading_characterestics(item):
+    global dexterity, armor, health, mane, physical_damage, magic_damage, critical, speed
+    dexterity = cursor.execute(f"""SELECT dexterity FROM Items WHERE item = '{item}'""").fetchone()
+    armor = cursor.execute(f"""SELECT armor FROM Items WHERE item = '{item}'""").fetchone()
+    health = cursor.execute(f"""SELECT health FROM Items WHERE item = '{item}'""").fetchone()
+    mane = cursor.execute(f"""SELECT mana FROM Items WHERE item = '{item}'""").fetchone()
+    physical_damage = cursor.execute(f"""SELECT physical_damage FROM Items WHERE item = '{item}'""").fetchone()
+    magic_damage = cursor.execute(f"""SELECT magic_damage FROM Items WHERE item = '{item}'""").fetchone()
+    critical = cursor.execute(f"""SELECT critical_damage FROM Items WHERE item = '{item}'""").fetchone()
+    speed = cursor.execute(f"""SELECT speed FROM Items WHERE item = '{item}'""").fetchone()
+
 
 if menu.main_menu.flag_exit:
     pygame.init()
@@ -64,20 +78,72 @@ if menu.main_menu.flag_exit:
     tiles_collide_back = pygame.sprite.Group()
     attacks_sprites = pygame.sprite.Group()
     SPEED_SKELETON = 10
-    SPEED_PLAYER = 20
     FPS = 24
-    PLAYER_X, PLAYER_Y, MAX_HP_PLAYER, PLAYER_DAMAGE, PLAYER_DEFENSE, PLAYER_POTIONS_HP, PLAYER_POTIONS_MANA, MAX_MANA_PLAYER, KNIGHT_CRIT, DEXTERITY, AWARD = 250, 250, 100, 50, 5, 3, 5, 200, 50, 10, 30
+    PLAYER_X, PLAYER_Y, PLAYER_POTIONS_HP, PLAYER_POTIONS_MANA, AWARD = 250, 250, 3, 5, 30
     MAX_HP_MOB, MOB_DAMAGE, MOB_DEFENSE = 100, 20, 0
+    rasa = cursor.execute("""SELECT rasa FROM Data""").fetchone()[0]
 
-    sound_knight_attack = pygame.mixer.Sound('data/Knight/knight_attack.mp3')
+    MAX_HP_PLAYER = cursor.execute("""SELECT player_health FROM Data""").fetchone()[0]
+    PLAYER_DAMAGE = cursor.execute("""SELECT player_damage FROM Data""").fetchone()[0]
+    PLAYER_DEFENSE = cursor.execute("""SELECT player_protection FROM Data""").fetchone()[0]
+    if rasa == 'knight':
+        MAX_MANA_PLAYER = 'None'
+    else:
+        MAX_MANA_PLAYER = int(cursor.execute("""SELECT player_mana FROM Data""").fetchone()[0])
+    if rasa == 'knight':
+        KNIGHT_CRIT = int(cursor.execute("""SELECT player_critical FROM Data""").fetchone()[0])
+    else:
+        KNIGHT_CRIT = 'None'
+    DEXTERITY = cursor.execute("""SELECT player_dexterity FROM Data""").fetchone()[0]
+    SPEED_PLAYER = cursor.execute("""SELECT player_speed FROM Data""").fetchone()[0]
+
+    tab_equipment = ["None" for i in range(5)]
+    result = cursor.execute("""SELECT equipment FROM Data""").fetchone()[0].split()
+    for i in range(len(result)):
+        tab_equipment[i] = result[i]
+
+    for p in tab_equipment:
+        if p != 'None':
+            reading_characterestics(p + '.png')
+            if health[0] is not None:
+                MAX_HP_PLAYER += health[0]
+            if physical_damage[0] is not None:
+                if rasa == 'knight':
+                    PLAYER_DAMAGE += physical_damage[0]
+            if magic_damage[0] is not None:
+                if rasa == 'wizard':
+                    PLAYER_DAMAGE += magic_damage[0]
+            if armor[0] is not None:
+                PLAYER_DEFENSE += armor[0]
+            if mane[0] is not None:
+                if rasa == 'wizard':
+                    MAX_MANA_PLAYER += mane[0]
+            if critical[0] is not None:
+                if rasa == 'knight':
+                    KNIGHT_CRIT += int(critical[0][:-1])
+            if dexterity[0] is not None:
+                DEXTERITY += int(dexterity[0][0])
+            if speed[0] is not None:
+                SPEED_PLAYER += speed[0]
+
+        volume_effects = float(cursor.execute("""SELECT sound_effects FROM Data""").fetchone()[0])
+        sound_knight_attack = pygame.mixer.Sound('data/Knight/knight_attack.mp3')
+    sound_knight_attack.set_volume(volume_effects)
     sound_knight_walk = pygame.mixer.Sound('data/Knight/knight_move.mp3')
+    sound_knight_walk.set_volume(volume_effects)
     sound_charge1 = pygame.mixer.Sound('data/Mag/charge1.mp3')
+    sound_charge1.set_volume(volume_effects)
     sound_charge2 = pygame.mixer.Sound('data/Mag/charge2.mp3')
+    sound_charge2.set_volume(volume_effects)
 
     sound_warrior_attack = pygame.mixer.Sound('data/Skeleton_warrior/warrior_attack.mp3')
+    sound_warrior_attack.set_volume(volume_effects)
     sound_skeleton_walk = pygame.mixer.Sound('data/Skeleton_warrior/warrior_walk.mp3')
+    sound_skeleton_walk.set_volume(volume_effects)
     sound_skeleton_death = pygame.mixer.Sound('data/Skeleton_warrior/warrior_death.mp3')
+    sound_skeleton_death.set_volume(volume_effects)
     sound_archero_attack = pygame.mixer.Sound('data/Skeleton_archero/archero_attack.mp3')
+    sound_archero_attack.set_volume(volume_effects)
 
     playlist = ['One_DINAMO.mp3', 'Five_DINAMO.mp3', 'One_RPG.mp3', 'Four_DINAMO.mp3']
     current_song = 1
@@ -847,17 +913,13 @@ class Camera:
 
 class Inventory:
     def __init__(self, width, height):
-        global tab_inventory, tab_equipment, gold, cursor, con, money
+        global tab_inventory, gold, cursor, con, money
         self.con = con
         self.cursor = cursor
         tab_inventory = ["None" for i in range(20)]
         result = self.cursor.execute("""SELECT inventory FROM Data""").fetchone()[0].split()
         for i in range(len(result)):
             tab_inventory[i] = result[i]
-        tab_equipment = ["None" for i in range(5)]
-        result = self.cursor.execute("""SELECT equipment FROM Data""").fetchone()[0].split()
-        for i in range(len(result)):
-            tab_equipment[i] = result[i]
         gold += int(self.cursor.execute("""SELECT money FROM Data""").fetchone()[0])
         self.click = False
         self.image_showing_characteristics = 'None'
@@ -900,13 +962,7 @@ class Inventory:
             k = -1
             screen.blit(load_image_inventory(self.image_showing_characteristics), (1110, 150))
             selling_price = self.cursor.execute(f"""SELECT cost FROM Items WHERE item = '{self.image_showing_characteristics}'""").fetchone()
-            dexterity = self.cursor.execute(f"""SELECT dexterity FROM Items WHERE item = '{self.image_showing_characteristics}'""").fetchone()
-            armor = self.cursor.execute(f"""SELECT armor FROM Items WHERE item = '{self.image_showing_characteristics}'""").fetchone()
-            health = self.cursor.execute(f"""SELECT health FROM Items WHERE item = '{self.image_showing_characteristics}'""").fetchone()
-            mane = self.cursor.execute(f"""SELECT mana FROM Items WHERE item = '{self.image_showing_characteristics}'""").fetchone()
-            physical_damage = self.cursor.execute(f"""SELECT physical_damage FROM Items WHERE item = '{self.image_showing_characteristics}'""").fetchone()
-            magic_damage = self.cursor.execute(f"""SELECT magic_damage FROM Items WHERE item = '{self.image_showing_characteristics}'""").fetchone()
-            speed = self.cursor.execute(f"""SELECT speed FROM Items WHERE item = '{self.image_showing_characteristics}'""").fetchone()
+            reading_characterestics(self.image_showing_characteristics)
             name = ' '.join(self.image_showing_characteristics[:-9].split('_'))
             text_name = font_small.render(name, True, (255, 255, 255))
             text_selling_price = font_smaller.render('Цена при продаже ' + str(selling_price[0] // 2), True, (255, 255, 0))
@@ -935,6 +991,10 @@ class Inventory:
                 k += 1
                 text_magic_damage = font_smaller.render('Магический урон +' + str(magic_damage[0]), True, (255, 255, 255))
                 screen.blit(text_magic_damage, (1220, 150 + 20 * k))
+            if critical[0] is not None:
+                k += 1
+                text_critical = font_smaller.render('Критический урон +' + str(critical[0]), True, (255, 255, 255))
+                screen.blit(text_critical, (1220, 150 + 20 * k))
             if speed[0] is not None:
                 k += 1
                 text_speed = font_smaller.render('Скорость +' + str(speed[0]), True, (255, 255, 255))
@@ -1054,13 +1114,7 @@ class Equipment:
             k = -1
             screen.blit(load_image_inventory(self.image_showing_characteristics), (1110, 150))
             selling_price = self.cursor.execute(f"""SELECT cost FROM Items WHERE item = '{self.image_showing_characteristics}'""").fetchone()
-            dexterity = self.cursor.execute(f"""SELECT dexterity FROM Items WHERE item = '{self.image_showing_characteristics}'""").fetchone()
-            armor = self.cursor.execute(f"""SELECT armor FROM Items WHERE item = '{self.image_showing_characteristics}'""").fetchone()
-            health = self.cursor.execute(f"""SELECT health FROM Items WHERE item = '{self.image_showing_characteristics}'""").fetchone()
-            mane = self.cursor.execute(f"""SELECT mana FROM Items WHERE item = '{self.image_showing_characteristics}'""").fetchone()
-            physical_damage = self.cursor.execute(f"""SELECT physical_damage FROM Items WHERE item = '{self.image_showing_characteristics}'""").fetchone()
-            magic_damage = self.cursor.execute(f"""SELECT magic_damage FROM Items WHERE item = '{self.image_showing_characteristics}'""").fetchone()
-            speed = self.cursor.execute(f"""SELECT speed FROM Items WHERE item = '{self.image_showing_characteristics}'""").fetchone()
+            reading_characterestics(self.image_showing_characteristics)
             name = ' '.join(self.image_showing_characteristics[:-9].split('_'))
             text_name = font_small.render(name, True, (255, 255, 255))
             text_selling_price = font_smaller.render('Цена при продаже ' + str(selling_price[0] // 2), True, (255, 255, 0))
@@ -1089,6 +1143,10 @@ class Equipment:
                 k += 1
                 text_magic_damage = font_smaller.render('Магический урон +' + str(magic_damage[0]), True, (255, 255, 255))
                 screen.blit(text_magic_damage, (1220, 150 + 20 * k))
+            if critical[0] is not None:
+                k += 1
+                text_critical = font_smaller.render('Критический урон +' + str(critical[0]), True, (255, 255, 255))
+                screen.blit(text_critical, (1220, 150 + 20 * k))
             if speed[0] is not None:
                 k += 1
                 text_speed = font_smaller.render('Скорость +' + str(speed[0]), True, (255, 255, 255))
@@ -1210,13 +1268,7 @@ class Bench:
             k = -1
             screen.blit(load_image_inventory(self.image_showing_characteristics), (1110, 150))
             selling_price = self.cursor.execute(f"""SELECT cost FROM Items WHERE item = '{self.image_showing_characteristics}'""").fetchone()
-            dexterity = self.cursor.execute(f"""SELECT dexterity FROM Items WHERE item = '{self.image_showing_characteristics}'""").fetchone()
-            armor = self.cursor.execute(f"""SELECT armor FROM Items WHERE item = '{self.image_showing_characteristics}'""").fetchone()
-            health = self.cursor.execute(f"""SELECT health FROM Items WHERE item = '{self.image_showing_characteristics}'""").fetchone()
-            mane = self.cursor.execute(f"""SELECT mana FROM Items WHERE item = '{self.image_showing_characteristics}'""").fetchone()
-            physical_damage = self.cursor.execute(f"""SELECT physical_damage FROM Items WHERE item = '{self.image_showing_characteristics}'""").fetchone()
-            magic_damage = self.cursor.execute(f"""SELECT magic_damage FROM Items WHERE item = '{self.image_showing_characteristics}'""").fetchone()
-            speed = self.cursor.execute(f"""SELECT speed FROM Items WHERE item = '{self.image_showing_characteristics}'""").fetchone()
+            reading_characterestics(self.image_showing_characteristics)
             name = ' '.join(self.image_showing_characteristics[:-9].split('_'))
             text_name = font_small.render(name, True, (255, 255, 255))
             text_buy_price = font_smaller.render('Цена при покупке ' + str(selling_price[0]), True, (255, 255, 0))
@@ -1245,6 +1297,10 @@ class Bench:
                 k += 1
                 text_magic_damage = font_smaller.render('Магический урон +' + str(magic_damage[0]), True, (255, 255, 255))
                 screen.blit(text_magic_damage, (1220, 150 + 20 * k))
+            if critical[0] is not None:
+                k += 1
+                text_critical = font_smaller.render('Критический урон +' + str(critical[0]), True, (255, 255, 255))
+                screen.blit(text_critical, (1220, 150 + 20 * k))
             if speed[0] is not None:
                 k += 1
                 text_speed = font_smaller.render('Скорость +' + str(speed[0]), True, (255, 255, 255))
@@ -1362,6 +1418,45 @@ if menu.main_menu.flag_exit:
                         money = '{gold}'"""
                         cursor.execute(sql_update_query)
                         con.commit()
+
+                        MAX_HP_PLAYER = cursor.execute("""SELECT player_health FROM Data""").fetchone()[0]
+                        PLAYER_DAMAGE = cursor.execute("""SELECT player_damage FROM Data""").fetchone()[0]
+                        PLAYER_DEFENSE = cursor.execute("""SELECT player_protection FROM Data""").fetchone()[0]
+                        if rasa == 'knight':
+                            MAX_MANA_PLAYER = 'None'
+                        else:
+                            MAX_MANA_PLAYER = int(cursor.execute("""SELECT player_mana FROM Data""").fetchone()[0])
+                        if rasa == 'knight':
+                            KNIGHT_CRIT = int(cursor.execute("""SELECT player_critical FROM Data""").fetchone()[0])
+                        else:
+                            KNIGHT_CRIT = 'None'
+                        DEXTERITY = cursor.execute("""SELECT player_dexterity FROM Data""").fetchone()[0]
+                        SPEED_PLAYER = cursor.execute("""SELECT player_speed FROM Data""").fetchone()[0]
+
+                        for p in tab_equipment:
+                            if p != 'None':
+                                reading_characterestics(p + '.png')
+                                if health[0] is not None:
+                                    MAX_HP_PLAYER += health[0]
+                                if physical_damage[0] is not None:
+                                    if rasa == 'knight':
+                                        PLAYER_DAMAGE += physical_damage[0]
+                                if magic_damage[0] is not None:
+                                    if rasa == 'wizard':
+                                        PLAYER_DAMAGE += magic_damage[0]
+                                if armor[0] is not None:
+                                    PLAYER_DEFENSE += armor[0]
+                                if mane[0] is not None:
+                                    if rasa == 'wizard':
+                                        MAX_MANA_PLAYER += mane[0]
+                                if critical[0] is not None:
+                                    if rasa == 'knight':
+                                        KNIGHT_CRIT += int(critical[0][:-1])
+                                if dexterity[0] is not None:
+                                    DEXTERITY += int(dexterity[0][:-1])
+                                if speed[0] is not None:
+                                    SPEED_PLAYER += speed[0]
+                        print(MAX_HP_PLAYER, PLAYER_DAMAGE, PLAYER_DEFENSE, KNIGHT_CRIT, DEXTERITY, SPEED_PLAYER)
                     else:
                         run_invent = True
                         x_motion = 500

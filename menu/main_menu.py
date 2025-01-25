@@ -736,7 +736,14 @@ while running:
                                                 "None", "None", "None", "None", "None",
                                                 "None", "None", "None", "None", "None",])}', 
                         equipment = '{' '.join(["None", "None", "None", "None", "None"])}',
-                        money = '0'"""
+                        money = '1000000',
+                        player_health = '{150 if rasa == 'knight' else 100}',
+                        player_damage = '{7 if rasa == 'knight' else 10}',
+                        player_protection = '{3 if rasa == 'knight' else 1}',
+                        player_mana = '{'None' if rasa == 'knight' else '150'}',
+                        player_dexterity = '{2 if rasa == 'knight' else 5}',
+                        player_speed = '{20}',
+                        player_critical = '{'10' if rasa == 'knight' else 'None'}'"""
                         cursor.execute(sql_update_data)
                         con.commit()
                     else:
