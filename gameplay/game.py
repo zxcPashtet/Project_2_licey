@@ -61,14 +61,18 @@ if menu.main_menu.flag_exit:
     tiles_market = pygame.sprite.Group()
     tiles_collide_group = pygame.sprite.Group()
     tiles_collide_exit = pygame.sprite.Group()
+    tiles_collide_back = pygame.sprite.Group()
     attacks_sprites = pygame.sprite.Group()
     SPEED_SKELETON = 10
     SPEED_PLAYER = 20
     FPS = 24
     PLAYER_X, PLAYER_Y, MAX_HP_PLAYER, PLAYER_DAMAGE, PLAYER_DEFENSE, PLAYER_POTIONS_HP, PLAYER_POTIONS_MANA, MAX_MANA_PLAYER, KNIGHT_CRIT, DEXTERITY, AWARD = 250, 250, 100, 50, 5, 3, 5, 200, 50, 10, 30
     MAX_HP_MOB, MOB_DAMAGE, MOB_DEFENSE = 100, 20, 0
+
     sound_knight_attack = pygame.mixer.Sound('data/Knight/knight_attack.mp3')
     sound_knight_walk = pygame.mixer.Sound('data/Knight/knight_move.mp3')
+    sound_charge1 = pygame.mixer.Sound('data/Mag/charge1.mp3')
+    sound_charge2 = pygame.mixer.Sound('data/Mag/charge2.mp3')
 
     sound_warrior_attack = pygame.mixer.Sound('data/Skeleton_warrior/warrior_attack.mp3')
     sound_skeleton_walk = pygame.mixer.Sound('data/Skeleton_warrior/warrior_walk.mp3')
@@ -91,7 +95,8 @@ if menu.main_menu.flag_exit:
     tile_images = {
         'wall': pygame.transform.scale(load_image('levels/cave_wall.png'), (150, 150)),
         'empty': pygame.transform.scale(load_image('levels/cave_pol.png'), (150, 150)),
-        'exit': pygame.transform.scale(load_image('levels/cave.png'), (150, 150))
+        'exit': pygame.transform.scale(load_image('levels/cave.png'), (150, 150)),
+        'back': pygame.transform.scale(load_image('levels/ladder.png'), (50, 150))
     }
     tile_width = tile_height = 150
 
@@ -136,6 +141,14 @@ class Tile_exit(pygame.sprite.Sprite):
             tile_width * pos_x, tile_height * pos_y)
 
 
+class Tile_back(pygame.sprite.Sprite):
+    def __init__(self, tile_type, pos_x, pos_y):
+        super().__init__(tiles_collide_back, all_sprites)
+        self.image = tile_images[tile_type]
+        self.rect = self.image.get_rect().move(
+            tile_width * pos_x, tile_height * pos_y)
+
+
 class Tile_market(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y):
         super().__init__(tiles_market, all_sprites)
@@ -157,6 +170,9 @@ def generate_level(level):
             elif level[y][x] == '*':
                 Tile('empty', x, y)
                 Tile_exit('exit', x, y)
+            elif level[y][x] == '-':
+                Tile('empty', x, y)
+                Tile_back('back', x, y)
             elif level[y][x] == "@":
                 Tile('empty', x, y)
                 if player_class == 0:
@@ -188,7 +204,7 @@ class Knight(pygame.sprite.Sprite):
         self.flag_attack = 0
         self.potions_hp = potions_hp
         self.damage, self.hp, self.defense, self.max_hp, self.crit, self.dexterity = damage, max_hp, defense, max_hp, crit, dexterity
-        self.move_cooldown = 5
+        self.move_sound_cooldown, self.move_cooldown = 10, 5
 
     def attack(self, event):
         if event.key == pygame.K_f:
@@ -278,14 +294,18 @@ class Knight(pygame.sprite.Sprite):
                 self.move_play = False
 
     def sound_walk(self):
-        if self.move_cooldown == 0:
+        if self.move_sound_cooldown == 0:
             sound_knight_walk.play()
-        elif self.move_cooldown < 0:
-            self.move_cooldown = 5
+        elif self.move_sound_cooldown < 0:
+            self.move_sound_cooldown = 10
 
     def m(self):
         self.image = self.animation_list[0][self.move_cur]
-        self.move_cur = (self.move_cur + 1) % 8
+        if self.move_cooldown == 0:
+            self.move_cur = (self.move_cur + 1) % 8
+        elif self.move_cooldown < 0:
+            self.move_cooldown = 2
+
 
     def rotate(self):
         self.image = pygame.transform.flip(self.image, True, False)
@@ -344,6 +364,7 @@ class Mag(pygame.sprite.Sprite):
         self.shoot_cooldown = 0
         self.new_action = True
         self.defolt_attack, self.super_attack = 10, 30
+        self.move_sound_cooldown, self.move_cooldown = 10, 5
 
     def attack(self, event):
         if event.key == pygame.K_f and self.new_action:
@@ -370,10 +391,12 @@ class Mag(pygame.sprite.Sprite):
                         bullet = Bullet(self.rect.centerx, self.rect.centery, self.flag, self.defolt_attack, self.animation_bullet[0], 'player')
                         attacks_sprites.add(bullet)
                         all_sprites.add(bullet)
+                        sound_charge1.play()
                     if self.attack_cur == 12 and self.flag_attack == 4:
                         bullet = Bullet(self.rect.centerx, self.rect.centery, self.flag, self.super_attack, self.animation_bullet[1], 'player')
                         attacks_sprites.add(bullet)
                         all_sprites.add(bullet)
+                        sound_charge2.play()
                 if self.flag:
                     self.rotate()
                 if not self.flag:
@@ -432,9 +455,18 @@ class Mag(pygame.sprite.Sprite):
             else:
                 self.move_play = False
 
+    def sound_walk(self):
+        if self.move_sound_cooldown == 0:
+            sound_knight_walk.play()
+        elif self.move_sound_cooldown < 0:
+            self.move_sound_cooldown = 10
+
     def m(self):
         self.image = self.animation_list[0][self.move_cur]
-        self.move_cur = (self.move_cur + 1) % 7
+        if self.move_cooldown == 0:
+            self.move_cur = (self.move_cur + 1) % 7
+        elif self.move_cooldown < 0:
+            self.move_cooldown = 2
 
     def rotate(self):
         self.image = pygame.transform.flip(self.image, True, False)
@@ -560,7 +592,7 @@ class Warrior(pygame.sprite.Sprite):
         self.rect = self.image.get_rect().move(13 + x * tile_width, 5 + y * tile_height)
         self.mask = pygame.mask.from_surface(self.animation_list[2][3])
         self.death_flag, self.attack_flag, self.move_play, self.idle_flag = False, 0, False, True
-        self.move_cooldown = 10
+        self.move_sound_cooldown, self.move_cooldown = 20, 5
 
     def idle(self):
         if self.idle_flag:
@@ -639,10 +671,17 @@ class Warrior(pygame.sprite.Sprite):
                 self.idle_flag = True
 
     def sound_walk(self):
-        if self.move_cooldown == 0:
+        if self.move_sound_cooldown == 0:
             sound_skeleton_walk.play()
+        elif self.move_sound_cooldown < 0:
+            self.move_sound_cooldown = 20
+
+    def m(self):
+        self.image = self.animation_list[0][self.move_cur]
+        if self.move_cooldown == 0:
+            self.move_cur = (self.move_cur + 1) % 7
         elif self.move_cooldown < 0:
-            self.move_cooldown = 15
+            self.move_cooldown = 2
 
     def dead(self):
         global gold
@@ -658,10 +697,6 @@ class Warrior(pygame.sprite.Sprite):
                 self.death_cur = (self.death_cur + 1)
             if self.death_cur == 3:
                 self.death_cur = 3
-
-    def m(self):
-        self.image = self.animation_list[0][self.move_cur]
-        self.move_cur = (self.move_cur + 1) % 7
 
     def rotate(self):
         self.image = pygame.transform.flip(self.image, True, False)
@@ -693,7 +728,7 @@ class Archero(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
         self.death_flag, self.attack_flag, self.move_play, self.idle_flag, self.flag = False, 0, False, True, False
         self.defolt_attack = damage
-        self.move_cooldown = 10
+        self.move_sound_cooldown, self.move_cooldown = 20, 5
 
     def idle(self):
         if self.idle_flag:
@@ -707,7 +742,7 @@ class Archero(pygame.sprite.Sprite):
 
     def attack(self):
         if math.sqrt((player.rect.center[0] - self.rect.center[0]) ** 2 + (
-                player.rect.center[1] - self.rect.center[1]) ** 2) <= 360:
+                player.rect.center[1] - self.rect.center[1]) ** 2) < 400:
             self.action_attack()
             self.idle_flag = False
         else:
@@ -735,7 +770,7 @@ class Archero(pygame.sprite.Sprite):
     def move(self):
         if not self.death_flag and self.move_play:
             if math.sqrt((player.rect.center[0] - self.rect.center[0]) ** 2 + (
-                    player.rect.center[1] - self.rect.center[1]) ** 2) <= 600:
+                    player.rect.center[1] - self.rect.center[1]) ** 2) <= 800:
                 self.idle_flag = False
                 if player.rect[1] > self.rect[1]:
                     self.m()
@@ -758,10 +793,17 @@ class Archero(pygame.sprite.Sprite):
                     self.idle_flag = True
 
     def sound_walk(self):
-        if self.move_cooldown == 0:
+        if self.move_sound_cooldown == 0:
             sound_skeleton_walk.play()
+        elif self.move_sound_cooldown < 0:
+            self.move_sound_cooldown = 20
+
+    def m(self):
+        self.image = self.animation_list[0][self.move_cur]
+        if self.move_cooldown == 0:
+            self.move_cur = (self.move_cur + 1) % 7
         elif self.move_cooldown < 0:
-            self.move_cooldown = 10
+            self.move_cooldown = 2
 
     def dead(self):
         global gold
@@ -777,10 +819,6 @@ class Archero(pygame.sprite.Sprite):
                 self.death_cur = (self.death_cur + 1)
             if self.death_cur == 4:
                 self.death_cur = 4
-
-    def m(self):
-        self.image = self.animation_list[0][self.move_cur]
-        self.move_cur = (self.move_cur + 1) % 7
 
     def rotate(self):
         self.image = pygame.transform.flip(self.image, True, False)
@@ -1361,6 +1399,7 @@ if menu.main_menu.flag_exit:
             if not i.attack_flag:
                 i.move()
                 i.move_cooldown -= 1
+                i.move_sound_cooldown -= 1
             i.health()
             i.idle()
             i.attack()
@@ -1369,6 +1408,7 @@ if menu.main_menu.flag_exit:
 
         player_sprites.draw(screen)
         player.move()
+        player.move_sound_cooldown -= 1
         player.move_cooldown -= 1
         player.action_attack()
         player.health()
@@ -1376,7 +1416,10 @@ if menu.main_menu.flag_exit:
             player.dead()
 
         if pygame.sprite.spritecollideany(player, tiles_collide_exit):
-            run_game = False
+            pass
+
+        if pygame.sprite.spritecollideany(player, tiles_collide_back):
+            pass
 
         if pygame.sprite.spritecollideany(player, tiles_market):
             player.potions_hp = PLAYER_POTIONS_HP
