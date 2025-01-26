@@ -71,6 +71,7 @@ if menu.main_menu.flag_exit:
     player_sprites = pygame.sprite.Group()
     mob_sprites = pygame.sprite.Group()
     all_sprites = pygame.sprite.Group()
+    npc_sprites = pygame.sprite.Group()
     tiles_group = pygame.sprite.Group()
     tiles_market = pygame.sprite.Group()
     tiles_collide_group = pygame.sprite.Group()
@@ -258,6 +259,9 @@ def generate_level(level):
             elif level[y][x] == '^':
                 Tile('empty', x, y)
                 Boss(x, y, MAX_HP_MOB * 3, MOB_DAMAGE * 4, MOB_DEFENSE * 2)
+            elif level[y][x] == '+':
+                Tile('empty', x, y)
+                Blacksmith(x, y)
     return new_player, x, y
 
 
@@ -430,6 +434,22 @@ class Knight(pygame.sprite.Sprite):
                 flag_completion = True
 
 
+class Blacksmith(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__(npc_sprites, all_sprites)
+        self.animation_list = [pygame.transform.scale(load_image(f"Blacksmith/{i}.png"), (110, 160)) for i in range(1, 9)]
+        self.image = self.animation_list[0]
+        self.rect = self.image.get_rect().move(13 + x * tile_width, y * tile_height - 10)
+        self.update_time = pygame.time.get_ticks()
+        self.idle_cur = 0
+
+    def update(self):
+        idle_cooldown = 200
+        self.image = self.animation_list[self.idle_cur]
+        if pygame.time.get_ticks() - self.update_time > idle_cooldown:
+            self.update_time = pygame.time.get_ticks()
+            self.idle_cur = (self.idle_cur + 1) % 8
+
 
 class Mag(pygame.sprite.Sprite):
     def __init__(self, x, y, max_hp, damage, defense, potions_hp, potions_mana, max_mana, dexterity):
@@ -459,7 +479,8 @@ class Mag(pygame.sprite.Sprite):
         self.temp_1 = 0
 
     def changing_characteristics(self):
-        self.damage, self.defense, self.max_hp, self.crit, self.dexterity = PLAYER_DAMAGE, PLAYER_DEFENSE, MAX_HP_PLAYER, KNIGHT_CRIT, DEXTERITY
+        self.damage, self.defense, self.max_hp, self.crit, self.dexterity, self.max_mana = PLAYER_DAMAGE, PLAYER_DEFENSE, MAX_HP_PLAYER, KNIGHT_CRIT, DEXTERITY, MAX_MANA_PLAYER
+        self.mana = MAX_MANA_PLAYER
         if last_max_hp < MAX_HP_PLAYER:
             self.hp = MAX_HP_PLAYER - (last_max_hp - self.hp)
         if last_max_hp > MAX_HP_PLAYER:
@@ -609,7 +630,7 @@ class Mag(pygame.sprite.Sprite):
         self.temp_1 += 1
         if self.death_flag:
             self.image = self.animation_list[3][self.death_cur]
-            if pygame.time.get_ticks() - self.update_time > death_cooldown and self.death_cur != 5:
+            if pygame.time.get_ticks() - self.update_time > death_cooldown and self.death_cur != 3:
                 self.update_time = pygame.time.get_ticks()
                 self.death_cur = self.death_cur + 1
             if self.death_cur == 3:
@@ -981,7 +1002,7 @@ class Boss(pygame.sprite.Sprite):
 
     def attack(self):
         if math.sqrt((player.rect.center[0] - self.rect.center[0]) ** 2 + (
-                player.rect.center[1] - self.rect.center[1]) ** 2) <= 80:
+                player.rect.center[1] - self.rect.center[1]) ** 2) <= 80 and (self.rect.y == player.rect.y):
             if self.new_motion:
                 if random.randrange(1, 400) >= 0 and random.randrange(1, 400) <= 200:
                     self.flag_attack = 2
@@ -1248,8 +1269,8 @@ class Inventory:
         if event.type == pygame.MOUSEBUTTONUP and self.click and self.portable != 'None':
             self.cell = self.clicking_cell(event.pos)
             self.click = False
-            if (event.pos[0] < 1110 or event.pos[0] > 1560) or (event.pos[1] > 468 or event.pos[1] < 400):
-                if (event.pos[0] > 1110 and event.pos[0] < 1560) and (event.pos[1] > 590 and event.pos[1] < 862):
+            if (event.pos[0] <= 1110 or event.pos[0] >= 1560) or (event.pos[1] >= 468 or event.pos[1] <= 400):
+                if (event.pos[0] >= 1110 and event.pos[0] <= 1560) and (event.pos[1] >= 590 and event.pos[1] <= 862):
                     if tab_inventory[(self.cell[0] + (5 * self.cell[1] + 1)) - 1] == 'None':
                         tab_inventory[(self.cell[0] + (5 * self.cell[1] + 1)) - 1] = self.portable
                     else:
@@ -1399,7 +1420,7 @@ class Equipment:
         if event.type == pygame.MOUSEBUTTONUP and self.click and self.portable != 'None':
             self.click = False
             self.cell = self.clicking_cell(event.pos)
-            if (event.pos[0] < 1110 or event.pos[0] > 1560) or (event.pos[1] > 468 or event.pos[1] < 400) and (event.pos[1] > 862 or event.pos[1] < 590):
+            if (event.pos[0] <= 1110 or event.pos[0] >= 1560) or (event.pos[1] >= 468 or event.pos[1] <= 400) and (event.pos[1] >= 862 or event.pos[1] <= 590):
                 tab_equipment[self.position] = self.portable
             if (event.pos[0] > 1110 and event.pos[0] < 1560) and (event.pos[1] > 400 and event.pos[1] < 468):
                 if tab_equipment[self.cell[0]] == 'None':
@@ -1630,7 +1651,7 @@ if menu.main_menu.flag_exit:
                             if board_inv.portable != 'None':
                                 tab_inventory[board_inv.position] = board_inv.portable
                                 board_inv.portable = 'None'
-                            print(MAX_HP_PLAYER, PLAYER_DAMAGE, PLAYER_DEFENSE, KNIGHT_CRIT, DEXTERITY, SPEED_PLAYER)
+                            print(MAX_HP_PLAYER, PLAYER_DAMAGE, PLAYER_DEFENSE, KNIGHT_CRIT, DEXTERITY, SPEED_PLAYER, MAX_MANA_PLAYER)
                         else:
                             run_invent = True
                             x_motion = 500
@@ -1710,6 +1731,8 @@ if menu.main_menu.flag_exit:
 
             all_sprites.draw(screen)
             mob_sprites.draw(screen)
+            npc_sprites.draw(screen)
+            npc_sprites.update()
             for i in mob_sprites:
                 if not i.attack_flag:
                     i.move()
