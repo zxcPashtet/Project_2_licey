@@ -1269,7 +1269,7 @@ class Inventory:
         if event.type == pygame.MOUSEBUTTONUP and self.click and self.portable != 'None':
             self.cell = self.clicking_cell(event.pos)
             self.click = False
-            if (event.pos[0] <= 1110 or event.pos[0] >= 1560) or (event.pos[1] >= 468 or event.pos[1] <= 400):
+            if (event.pos[0] < 1110 or event.pos[0] > 1560) or (event.pos[1] > 468 or event.pos[1] < 400):
                 if (event.pos[0] >= 1110 and event.pos[0] <= 1560) and (event.pos[1] >= 590 and event.pos[1] <= 862):
                     if tab_inventory[(self.cell[0] + (5 * self.cell[1] + 1)) - 1] == 'None':
                         tab_inventory[(self.cell[0] + (5 * self.cell[1] + 1)) - 1] = self.portable
@@ -1279,7 +1279,7 @@ class Inventory:
                         tab_inventory[self.position] = temp
                 else:
                     tab_inventory[self.position] = self.portable
-            if (event.pos[0] > 1110 and event.pos[0] < 1560) and (event.pos[1] > 400 and event.pos[1] < 468):
+            if (event.pos[0] >= 1110 and event.pos[0] <= 1560) and (event.pos[1] >= 400 and event.pos[1] <= 468):
                 self.cell = board_equ.clicking_cell(event.pos)
                 if tab_equipment[self.cell[0]] == 'None':
                     tab_equipment[self.cell[0]] = self.portable
@@ -1420,16 +1420,16 @@ class Equipment:
         if event.type == pygame.MOUSEBUTTONUP and self.click and self.portable != 'None':
             self.click = False
             self.cell = self.clicking_cell(event.pos)
-            if (event.pos[0] <= 1110 or event.pos[0] >= 1560) or (event.pos[1] >= 468 or event.pos[1] <= 400) and (event.pos[1] >= 862 or event.pos[1] <= 590):
+            if (event.pos[0] < 1110 or event.pos[0] > 1560) or (event.pos[1] > 468 or event.pos[1] < 400) and (event.pos[1] > 862 or event.pos[1] < 590):
                 tab_equipment[self.position] = self.portable
-            if (event.pos[0] > 1110 and event.pos[0] < 1560) and (event.pos[1] > 400 and event.pos[1] < 468):
+            if (event.pos[0] >= 1110 and event.pos[0] <= 1560) and (event.pos[1] >= 400 and event.pos[1] <= 468):
                 if tab_equipment[self.cell[0]] == 'None':
                     tab_equipment[self.cell[0]] = self.portable
                 else:
                     temp = tab_equipment[self.cell[0]]
                     tab_equipment[self.cell[0]] = self.portable
                     tab_equipment[self.position] = temp
-            if (event.pos[0] > 1110 and event.pos[0] < 1560) and (event.pos[1] > 590 and event.pos[1] < 862):
+            if (event.pos[0] >= 1110 and event.pos[0] <= 1560) and (event.pos[1] >= 590 and event.pos[1] <= 862):
                 self.cell = board_inv.clicking_cell(event.pos)
                 if tab_inventory[(self.cell[0] + (5 * self.cell[1] + 1)) - 1] == 'None':
                     tab_inventory[(self.cell[0] + (5 * self.cell[1] + 1)) - 1] = self.portable
