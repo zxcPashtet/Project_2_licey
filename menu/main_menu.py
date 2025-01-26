@@ -6,6 +6,10 @@ import sqlite3
 import cv2
 
 
+os.chdir('..')
+os.chdir('gameplay')
+
+
 def load_image(name, colorkey=None):
     fullname = os.path.join('images', name)
     if not os.path.isfile(fullname):
