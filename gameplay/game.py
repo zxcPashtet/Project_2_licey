@@ -251,6 +251,9 @@ def generate_level(level):
             elif level[y][x] == '&':
                 Tile('empty', x, y)
                 Archero(x, y, MAX_HP_MOB // 2, MOB_DAMAGE, MOB_DEFENSE)
+            elif level[y][x] == '^':
+                Tile('empty', x, y)
+                Boss(x, y, MAX_HP_MOB * 3, MOB_DAMAGE * 4, MOB_DEFENSE * 2)
     return new_player, x, y
 
 
@@ -429,7 +432,7 @@ class Mag(pygame.sprite.Sprite):
         self.damage, self.hp, self.defense, self.max_hp, self.mana, self.max_mana, self.dexterity = damage, max_hp, defense, max_hp, max_mana, max_mana, dexterity
         self.shoot_cooldown = 0
         self.new_action = True
-        self.defolt_attack, self.super_attack = 10, 30
+        self.defolt_attack = damage
         self.move_sound_cooldown, self.move_cooldown = 10, 5
 
     def attack(self, event):
@@ -459,7 +462,7 @@ class Mag(pygame.sprite.Sprite):
                         all_sprites.add(bullet)
                         sound_charge1.play()
                     if self.attack_cur == 12 and self.flag_attack == 4:
-                        bullet = Bullet(self.rect.centerx, self.rect.centery, self.flag, self.super_attack, self.animation_bullet[1], 'player')
+                        bullet = Bullet(self.rect.centerx, self.rect.centery, self.flag, self.defolt_attack * 2, self.animation_bullet[1], 'player')
                         attacks_sprites.add(bullet)
                         all_sprites.add(bullet)
                         sound_charge2.play()
@@ -885,6 +888,164 @@ class Archero(pygame.sprite.Sprite):
                 self.death_cur = (self.death_cur + 1)
             if self.death_cur == 4:
                 self.death_cur = 4
+
+    def rotate(self):
+        self.image = pygame.transform.flip(self.image, True, False)
+
+    def health(self):
+        if self.hp == 0:
+            self.death_flag = True
+        if not self.death_flag:
+            pygame.draw.rect(screen, 'red', (self.rect.x + 50, self.rect.y, 20, 3))
+            pygame.draw.rect(screen, 'green', (self.rect.x + 50, self.rect.y, int((self.hp / self.max_hp) * 20), 3))
+
+
+class Boss(pygame.sprite.Sprite):
+    def __init__(self, x, y, max_hp, damage, defense):
+        super().__init__(mob_sprites, all_sprites)
+        self.animation_list = []
+        self.animation_list.append([pygame.transform.scale(load_image(f"Boss/walk/{i}.png"), (200, 130)) for i in range(1, 14)])
+        self.animation_list.append([pygame.transform.scale(load_image(f"Boss/idle/{i}.png"), (200, 130)) for i in range(1, 8)])
+        self.animation_list.append([pygame.transform.scale(load_image(f"Boss/attack1/{i}.png"), (200, 130)) for i in range(1, 8)])
+        self.animation_list.append([pygame.transform.scale(load_image(f"Boss/attack2/{i}.png"), (200, 130)) for i in range(1, 11)])
+        self.animation_list.append([pygame.transform.scale(load_image(f"Boss/dead/{i}.png"), (200, 130)) for i in range(1, 4)])
+        self.frame_index, self.cur = 1, 0
+        self.move_cur, self.death_cur, self.attack_cur, self.idle_cur = 0, 0, 0, 0
+        self.max_hp, self.hp, self.defense, self.damage = max_hp, max_hp, defense, damage
+        self.x, self.y = x, y
+        self.update_time = pygame.time.get_ticks()
+        self.image = self.animation_list[self.frame_index][self.cur]
+        self.rect = self.image.get_rect().move(13 + x * tile_width, 5 + y * tile_height)
+        self.mask = pygame.mask.from_surface(self.image)
+        self.death_flag, self.attack_flag, self.move_play, self.idle_flag, self.flag = False, 0, False, True, False
+        self.defolt_attack = damage
+        self.move_sound_cooldown, self.move_cooldown = 20, 5
+        self.flag_attack = None
+        self.new_motion = True
+
+    def idle(self):
+        if self.idle_flag:
+            idle_cooldown = 200
+            self.image = self.animation_list[1][self.idle_cur]
+            if pygame.time.get_ticks() - self.update_time > idle_cooldown:
+                self.update_time = pygame.time.get_ticks()
+                self.idle_cur = (self.idle_cur + 1) % 6
+        if not self.idle_flag:
+            self.idle_cur = 0
+
+    def attack(self):
+        if math.sqrt((player.rect.center[0] - self.rect.center[0]) ** 2 + (
+                player.rect.center[1] - self.rect.center[1]) ** 2) <= 80:
+            if self.new_motion:
+                if random.randrange(1, 400) >= 0 and random.randrange(1, 400) <= 200:
+                    self.flag_attack = 2
+                    self.proverka = 4
+                    self.new_motion = False
+                else:
+                    self.flag_attack = 3
+                    self.proverka = 8
+                    self.new_motion = False
+            self.action_attack()
+            self.idle_flag = False
+        else:
+            self.move_play = True
+            self.attack_cur = 0
+
+    def action_attack(self):
+        self.move_play = False
+        attack_cooldown = 150
+        if not self.death_flag:
+            self.image = self.animation_list[self.flag_attack][self.attack_cur]
+            if pygame.time.get_ticks() - self.update_time > attack_cooldown:
+                self.update_time = pygame.time.get_ticks()
+                if self.attack_cur == self.proverka:
+                    if pygame.sprite.collide_mask(self, player):
+                        if not (random.randrange(1, 400) >= 0 and random.randrange(1, 400) <= 0 + player.dexterity * 4):
+                            if self.flag_attack == 3:
+                                player.hp = player.hp - (self.damage * 2 - player.defense)
+                            else:
+                                player.hp = player.hp - (self.damage - player.defense)
+                        if player.hp <= 0:
+                            player.death_flag = True
+                            player.hp = 0
+                self.attack_cur = (self.attack_cur + 1) % len(self.animation_list[self.flag_attack])
+            if self.flag_attack == 2:
+                if self.animation_list[2][5] and player.rect[0] < self.rect[0]:
+                    self.rotate()
+                    self.mask = pygame.mask.from_surface(self.image)
+                if self.animation_list[2][5] and player.rect[0] > self.rect[0]:
+                    self.mask = pygame.mask.from_surface(self.image)
+            else:
+                if self.animation_list[3][8] and player.rect[0] < self.rect[0]:
+                    self.rotate()
+                    self.mask = pygame.mask.from_surface(self.image)
+                if self.animation_list[3][8] and player.rect[0] > self.rect[0]:
+                    self.mask = pygame.mask.from_surface(self.image)
+            if self.attack_cur == len(self.animation_list[self.flag_attack]) - 1:
+                self.attack_cur = 0
+                self.new_motion = True
+
+    def move(self):
+        if not self.death_flag and self.move_play:
+            if math.sqrt((player.rect.center[0] - self.rect.center[0]) ** 2 + (
+                    player.rect.center[1] - self.rect.center[1]) ** 2) <= 1000:
+                self.idle_flag = False
+                if player.rect[0] > self.rect[0]:
+                    self.m()
+                    self.sound_walk()
+                    self.rect.x += SPEED_SKELETON
+                    if len(pygame.sprite.groupcollide(mob_sprites, tiles_collide_group, False, False)) != 0:
+                        self.rect.x -= SPEED_SKELETON
+                if player.rect[0] < self.rect[0]:
+                    self.m()
+                    self.sound_walk()
+                    self.rect.x -= SPEED_SKELETON
+                    if len(pygame.sprite.groupcollide(mob_sprites, tiles_collide_group, False, False)) != 0:
+                        self.rect.x += SPEED_SKELETON
+                if player.rect[1] > self.rect[1]:
+                    self.m()
+                    self.sound_walk()
+                    self.rect.y += SPEED_SKELETON
+                    if len(pygame.sprite.groupcollide(mob_sprites, tiles_collide_group, False, False)) != 0:
+                        self.rect.y -= SPEED_SKELETON
+                if player.rect[1] < self.rect[1]:
+                    self.m()
+                    self.sound_walk()
+                    self.rect.y -= SPEED_SKELETON
+                    if len(pygame.sprite.groupcollide(mob_sprites, tiles_collide_group, False, False)) != 0:
+                        self.rect.y += SPEED_SKELETON
+                if player.rect[0] < self.rect[0]:
+                    self.rotate()
+            else:
+                self.idle_flag = True
+
+    def sound_walk(self):
+        #if self.move_sound_cooldown == 0:
+        #    sound_skeleton_walk.play()
+        if self.move_sound_cooldown < 0:
+            self.move_sound_cooldown = 20
+
+    def m(self):
+        self.image = self.animation_list[0][self.move_cur]
+        if self.move_cooldown == 0:
+            self.move_cur = (self.move_cur + 1) % 13
+        elif self.move_cooldown < 0:
+            self.move_cooldown = 2
+
+    def dead(self):
+        global gold
+        self.idle_flag = False
+        attack_cooldown = 125
+        if self.death_flag:
+            self.image = self.animation_list[4][self.death_cur]
+            if pygame.time.get_ticks() - self.update_time > attack_cooldown and self.death_cur != 2:
+                self.update_time = pygame.time.get_ticks()
+                if self.death_cur == 0:
+                    gold += AWARD
+                    sound_skeleton_death.play()
+                self.death_cur = (self.death_cur + 1)
+            if self.death_cur == 2:
+                self.death_cur = 2
 
     def rotate(self):
         self.image = pygame.transform.flip(self.image, True, False)
@@ -1374,7 +1535,7 @@ def motion_cursor(x, y):
 if menu.main_menu.flag_exit:
     player_class = 0 if cursor.execute("""SELECT rasa FROM Data""").fetchone()[0] == 'knight' else 1
     camera = Camera()
-    player, x, y = generate_level(load_level('level1.txt'))
+    player, x, y = generate_level(load_level('level4.txt'))
     run_game = True
     run_invent = False
     clock = pygame.time.Clock()
