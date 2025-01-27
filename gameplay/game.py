@@ -67,11 +67,11 @@ def reading_characterestics(item):
 def сhanging_characteristics_enemies():
     global MAX_HP_MOB, MOB_DAMAGE, MOB_DEFENSE, SPEED_SKELETON
     if cursor.execute("""SELECT complexity FROM Data""").fetchone()[0] == 'normal':
-        MAX_HP_MOB, MOB_DAMAGE, MOB_DEFENSE = 10 * (now_level ** 3) * 10, 10 * (now_level ** 4) * 2, now_level ** 5
+        MAX_HP_MOB, MOB_DAMAGE, MOB_DEFENSE = 10 * (now_level ** 4) * 10, 10 * (now_level ** 4), now_level ** 5
         SPEED_SKELETON = 10 + now_level ** 2
     else:
-        MAX_HP_MOB, MOB_DAMAGE, MOB_DEFENSE = 10 * (now_level ** 5) * 10 * 2 + 50, 10 * (now_level ** 6) * 2 + 15, now_level ** 7 + 5
-        SPEED_SKELETON = 10 + now_level ** 3
+        MAX_HP_MOB, MOB_DAMAGE, MOB_DEFENSE = 10 * (now_level ** 5) * 10 * 2, 10 * (now_level ** 6) * 2 + 15, now_level ** 7
+        SPEED_SKELETON = 15 + now_level ** 3
 
 
 def clear_ini_group():
@@ -1668,8 +1668,8 @@ if menu.main_menu.flag_exit:
                                 board_inv.portable = 'None'
                         else:
                             run_invent = True
-                            x_motion = 500
-                            y_motion = 500
+                            x_motion = -1000
+                            y_motion = -1000
                     if run_invent and event.key == pygame.K_b:
                         if event.type == pygame.KEYDOWN:
                             flag_B = True
@@ -1820,6 +1820,8 @@ if menu.main_menu.flag_exit:
                 if event.type == pygame.QUIT:
                     run_game = False
                 if event.type == pygame.MOUSEMOTION:
+                    x_cursor = event.pos[0]
+                    y_cursor = event.pos[1]
                     if (event.pos[0] >= width // 2 - text_exit.get_width() // 2 and
                             event.pos[0] <= width // 2 - text_exit.get_width() // 2 + text_exit.get_width() and
                             event.pos[1] >= 400 and event.pos[1] <= 400 + text_exit.get_height()):
@@ -1837,6 +1839,7 @@ if menu.main_menu.flag_exit:
             if flag_win:
                 screen.blit(text_win, (width // 2 - text_win.get_width() // 2, 300))
             screen.blit(text_exit, (width // 2 - text_exit.get_width() // 2, 400))
+            motion_cursor(x_cursor, y_cursor)
 
         clock.tick(FPS)
         pygame.display.flip()
