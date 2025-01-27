@@ -64,10 +64,19 @@ def reading_characterestics(item):
     speed = cursor.execute(f"""SELECT speed FROM Items WHERE item = '{item}'""").fetchone()
 
 
-if menu.main_menu.flag_exit:
-    pygame.init()
-    size = width, height = 1600, 900
-    screen = pygame.display.set_mode(size)
+def сhanging_characteristics_enemies():
+    global MAX_HP_MOB, MOB_DAMAGE, MOB_DEFENSE, SPEED_SKELETON
+    if cursor.execute("""SELECT complexity FROM Data""").fetchone()[0] == 'normal':
+        MAX_HP_MOB, MOB_DAMAGE, MOB_DEFENSE = 10 * (now_level ** 3) * 10, 10 * (now_level ** 4) * 2, now_level ** 5
+        SPEED_SKELETON = 10 + now_level ** 2
+    else:
+        MAX_HP_MOB, MOB_DAMAGE, MOB_DEFENSE = 10 * (now_level ** 5) * 10 * 2 + 50, 10 * (now_level ** 6) * 2 + 15, now_level ** 7 + 5
+        SPEED_SKELETON = 10 + now_level ** 3
+
+
+def clear_ini_group():
+    global player_sprites, mob_sprites, all_sprites, npc_sprites,\
+        tiles_group, tiles_market, tiles_collide_group, tiles_collide_exit, tiles_collide_back, attacks_sprites
     player_sprites = pygame.sprite.Group()
     mob_sprites = pygame.sprite.Group()
     all_sprites = pygame.sprite.Group()
@@ -78,10 +87,17 @@ if menu.main_menu.flag_exit:
     tiles_collide_exit = pygame.sprite.Group()
     tiles_collide_back = pygame.sprite.Group()
     attacks_sprites = pygame.sprite.Group()
-    SPEED_SKELETON = 10
+
+
+if menu.main_menu.flag_exit:
+    pygame.init()
+    size = width, height = 1600, 900
+    screen = pygame.display.set_mode(size)
+    clear_ini_group()
     FPS = 24
     PLAYER_X, PLAYER_Y, PLAYER_POTIONS_HP, PLAYER_POTIONS_MANA, AWARD = 250, 250, 3, 5, 30
-    MAX_HP_MOB, MOB_DAMAGE, MOB_DEFENSE = 100, 20, 0
+    now_level = int(cursor.execute("""SELECT last_level FROM Data""").fetchone()[0])
+    сhanging_characteristics_enemies()
     rasa = cursor.execute("""SELECT rasa FROM Data""").fetchone()[0]
 
     MAX_HP_PLAYER = cursor.execute("""SELECT player_health FROM Data""").fetchone()[0]
@@ -151,7 +167,7 @@ if menu.main_menu.flag_exit:
     playlist = ['One_DINAMO.mp3', 'Five_DINAMO.mp3', 'One_RPG.mp3', 'Four_DINAMO.mp3']
     current_song = 1
 
-    music = pygame.mixer.music.load('music/One_DINAMO.mp3')
+    music = pygame.mixer.music.load('music/Five_RPG.mp3')
     pygame.mixer.music.play(1)
     pygame.mixer.music.set_volume(float(cursor.execute("""SELECT sound_music_game FROM Data""").fetchone()[0]))
 
@@ -169,8 +185,8 @@ if menu.main_menu.flag_exit:
     }
     tile_width = tile_height = 150
 
-    font_bigger = pygame.font.Font(load_font('Courier WGL4 Italic.otf'), 45)
-    font_big = pygame.font.Font(load_font('Courier WGL4 Italic.otf'), 40)
+    font_bigger = pygame.font.Font(load_font('Courier WGL4 Italic.otf'), 60)
+    font_big = pygame.font.Font(load_font('Courier WGL4 Italic.otf'), 45)
     font = pygame.font.Font(load_font('Courier WGL4 Italic.otf'), 35)
     font_small = pygame.font.Font(load_font('Courier WGL4 Italic.otf'), 25)
     font_smaller = pygame.font.Font(load_font('Courier WGL4 Italic.otf'), 20)
@@ -1609,7 +1625,7 @@ def motion_cursor(x, y):
 if menu.main_menu.flag_exit:
     player_class = 0 if cursor.execute("""SELECT rasa FROM Data""").fetchone()[0] == 'knight' else 1
     camera = Camera()
-    player, x, y = generate_level(load_level('level1.txt'))
+    player, x, y = generate_level(load_level(f'level{(cursor.execute("""SELECT last_level FROM Data""").fetchone()[0])}.txt'))
     run_game = True
     run_invent = False
     clock = pygame.time.Clock()
@@ -1634,7 +1650,7 @@ if menu.main_menu.flag_exit:
                     run_game = False
                 if event.type == END_MUSIC:
                     print(1)
-                    pygame.mixer.music.load('music/Five_DINAMO.mp3')
+                    pygame.mixer.music.load('music/Five_RPG.mp3')
                     pygame.mixer.music.play(1)
                 if event.type == pygame.MOUSEMOTION:
                     x_cursor = event.pos[0]
@@ -1754,10 +1770,22 @@ if menu.main_menu.flag_exit:
                 player.dead()
 
             if pygame.sprite.spritecollideany(player, tiles_collide_exit):
-                pass
+                clear_ini_group()
+                player, x, y = generate_level(load_level(f'level{str(now_level + 1)}.txt'))
+                sql_update_data = f"""Update Data set last_level = '{str(now_level + 1)}'"""
+                cursor.execute(sql_update_data)
+                con.commit()
+                now_level = int(cursor.execute("""SELECT last_level FROM Data""").fetchone()[0])
+                сhanging_characteristics_enemies()
 
             if pygame.sprite.spritecollideany(player, tiles_collide_back):
-                pass
+                clear_ini_group()
+                player, x, y = generate_level(load_level(f'level{str(now_level - 1)}.txt'))
+                sql_update_data = f"""Update Data set last_level = '{str(now_level - 1)}'"""
+                cursor.execute(sql_update_data)
+                con.commit()
+                now_level = int(cursor.execute("""SELECT last_level FROM Data""").fetchone()[0])
+                сhanging_characteristics_enemies()
 
             if pygame.sprite.spritecollideany(player, tiles_market):
                 player.potions_hp = PLAYER_POTIONS_HP

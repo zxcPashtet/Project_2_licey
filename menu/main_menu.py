@@ -226,6 +226,8 @@ def blit_new_game(flag_rect1, flag_rect2, screen):
     screen.blit(text_damage_w, (880, 540))
     screen.blit(text_protection_w, (880, 560))
     screen.blit(text_dexterity_w, (880, 580))
+    screen.blit(text_ability_knight, (0, 183))
+    screen.blit(text_ability_wizard, (1150, 183))
     screen.blit(text_complexity_normal, (456, 670))
     screen.blit(text_complexity_hard, (456, 720))
     screen.blit(text_error, (0, 900 - text_error.get_height()))
@@ -457,7 +459,7 @@ def blit_how_to_play():
     screen.blit(text_x, (width // 2 - text_movement.get_width() // 2 - text_wasd.get_width() // 2, 430))
     screen.blit(text_regen_mn, (width // 2 - text_movement.get_width() // 2 - text_wasd.get_width() // 2 + 30, 435))
     screen.blit(text_short_guide, (width // 2 - text_short_guide.get_width() // 2, 580))
-    screen.blit(text_guide, (0, 640))
+    screen.blit(text_guide, (0, 630))
 
 
 class Knight(pygame.sprite.Sprite):
@@ -600,6 +602,17 @@ while running:
                     text_damage_k = font_smaller.render('Урон 7', True, (255, 255, 255))
                     text_protection_k = font_smaller.render('Защита 3', True, (255, 255, 255))
                     text_dexterity_k = font_smaller.render('Ловкость 2%', True, (255, 255, 255))
+                    text_ability_knight = font_smaller.render('Атаки рыцаря могут со случайным\n шансом нанести'
+                                                              ' дополнительный урон.\n Вероятность нанести критический\n'
+                                                              ' урон может быть увеличена\n артефактами из лавки торговца.\n'
+                                                              'Увеличить урон рыцаря можно за счёт\n предметов с'
+                                                              ' характеристикой\n физичнский урон',
+                                                              True, (255, 255, 255))
+                    text_ability_wizard = font_smaller.render('У волшебника есть вторая, более\n мощная атака,'
+                                                              ' которая расходует ману.\n'
+                                                              'Увеличить урон волшебника можно\n за счёт предметов с'
+                                                              ' характеристикой\n магический урон',
+                                                              True, (255, 255, 255))
                     text_complexity_normal = font.render('Нормальная', True, (255, 255, 255))
                     text_complexity_hard = font.render('Сложная', True, (255, 255, 255))
                     text_back = font_smaller.render('Вернуться назад -', True, (255, 255, 255))
@@ -698,14 +711,18 @@ while running:
                     text_guide = font_small.render('"Ботл" - один из самых важных предметов,'
                                                    f' ведь он позволяет вам восстановить ваше здоровье и ману(при игре\n'
                                                    ' за волшебника). Заряды "Ботла" вы можете увидеть в левом верхнем углу'
-                                                   ' экрана(под полосами здоровья), и\n если они закончились,'
+                                                   ' экрана(под полосами ресурсов), и\n если они закончились,'
                                                    ' то вы не сможете восстановить себе ни здоровье, ни ману.'
                                                    ' Сделать это можно\n бесплатно, если подойти к торговцу, который'
                                                    ' располагается рядом с местом вашего появления на карте. При\n '
                                                    'открытии инвентаря рядом с торговцем также можно купить нужные вам '
                                                    'предметы, необходимые для прохождения\n новых уровней. Для переходя '
                                                    'на новый уровень вам необходимо отыскать проход, который'
-                                                   ' располагается где то\n на карте. Выживайте, побеждайте, фармитесь!'
+                                                   ' располагается где то\n на карте. Выживайте, побеждайте, фармитесь('
+                                                   'для того, чтобы враги появились заново после того, как вы их\n убьёте'
+                                                   ' нужно найти проход на новый уровень, зайти туда и обратно через'
+                                                   ' лестницу, которая располагается\n рядом с лавкой торговца на 2-ом'
+                                                   ' и 3-ем уровнях)!'
                                                    , True, (255, 255, 255))
 
                 if result != 0:
