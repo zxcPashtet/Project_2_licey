@@ -757,7 +757,7 @@ while running:
                                                 "None", "None", "None", "None", "None",
                                                 "None", "None", "None", "None", "None",])}', 
                         equipment = '{' '.join(["None", "None", "None", "None", "None"])}',
-                        money = '1000000',
+                        money = '0',
                         player_health = '{150 if rasa == 'knight' else 100}',
                         player_damage = '{7 if rasa == 'knight' else 10}',
                         player_protection = '{3 if rasa == 'knight' else 1}',

@@ -409,7 +409,7 @@ class Knight(pygame.sprite.Sprite):
     def use_health(self, event):
         if event.key == pygame.K_z and self.potions_hp > 0 and not self.death_flag:
             self.potions_hp -= 1
-            self.hp = self.hp + 30
+            self.hp = self.hp + MAX_HP_PLAYER // 4
             if self.hp > self.max_hp:
                 self.hp = self.max_hp
 
@@ -554,6 +554,7 @@ class Mag(pygame.sprite.Sprite):
             if keys[pygame.K_a]:
                 self.move_play = True
                 self.m()
+                self.sound_walk()
                 self.flag = True
                 self.rotate()
                 self.rect.x -= SPEED_PLAYER
@@ -562,6 +563,7 @@ class Mag(pygame.sprite.Sprite):
             elif keys[pygame.K_d]:
                 self.move_play = True
                 self.m()
+                self.sound_walk()
                 self.flag = False
                 self.rect.x += SPEED_PLAYER
                 if len(pygame.sprite.groupcollide(player_sprites, tiles_collide_group, False, False)) != 0:
@@ -569,6 +571,7 @@ class Mag(pygame.sprite.Sprite):
             elif keys[pygame.K_w]:
                 self.move_play = True
                 self.m()
+                self.sound_walk()
                 if self.flag:
                     self.rotate()
                 self.rect.y -= SPEED_PLAYER
@@ -577,6 +580,7 @@ class Mag(pygame.sprite.Sprite):
             elif keys[pygame.K_s]:
                 self.move_play = True
                 self.m()
+                self.sound_walk()
                 if self.flag:
                     self.rotate()
                 self.rect.y += SPEED_PLAYER
@@ -605,17 +609,17 @@ class Mag(pygame.sprite.Sprite):
     def use_health(self, event):
         if event.key == pygame.K_z and self.potions_hp > 0 and not self.death_flag:
             self.potions_hp -= 1
-            self.hp = self.hp + 30
+            self.hp = self.hp + MAX_HP_PLAYER // 4
             if self.hp > self.max_hp:
                 self.hp = self.max_hp
         if event.key == pygame.K_x and self.potions_mana > 0 and not self.death_flag:
             self.potions_mana -= 1
-            self.mana = self.mana + 30
+            self.mana = self.mana + MAX_MANA_PLAYER // 4
             if self.mana > self.max_mana:
                 self.mana = self.max_mana
 
     def health(self):
-        if self.hp == 0:
+        if self.hp <= 0:
             self.death_flag = True
         pygame.draw.rect(screen, 'red', (10, 10, 200, 20))
         pygame.draw.rect(screen, 'green', (10, 10, int((self.hp / self.max_hp) * 200), 20))
@@ -892,7 +896,7 @@ class Archero(pygame.sprite.Sprite):
 
     def action_attack(self):
         self.move_play = False
-        attack_cooldown = 125
+        attack_cooldown = 100
         if not self.death_flag:
             self.image = self.animation_list[2][self.attack_cur]
             if pygame.time.get_ticks() - self.update_time > attack_cooldown:
@@ -1012,7 +1016,7 @@ class Boss(pygame.sprite.Sprite):
 
     def attack(self):
         if math.sqrt((player.rect.center[0] - self.rect.center[0]) ** 2 + (
-                player.rect.center[1] - self.rect.center[1]) ** 2) <= 80 and (self.rect.y == player.rect.y):
+                player.rect.center[1] - self.rect.center[1]) ** 2) <= 80:
             if self.new_motion:
                 if random.randrange(1, 400) >= 0 and random.randrange(1, 400) <= 200:
                     self.flag_attack = 2
@@ -1030,7 +1034,10 @@ class Boss(pygame.sprite.Sprite):
 
     def action_attack(self):
         self.move_play = False
-        attack_cooldown = 150
+        if self.flag_attack == 2:
+            attack_cooldown = 150
+        else:
+            attack_cooldown = 100
         if not self.death_flag:
             self.image = self.animation_list[self.flag_attack][self.attack_cur]
             if pygame.time.get_ticks() - self.update_time > attack_cooldown:
@@ -1040,7 +1047,7 @@ class Boss(pygame.sprite.Sprite):
                         if not (random.randrange(1, 400) <= player.dexterity * 4):
                             if self.flag_attack == 3:
                                 player.hp -= 0 if self.damage * 2 <= player.defense else self.damage * 2 - player.defense
-                            else:
+                            elif self.flag_attack == 5:
                                 player.hp -= 0 if self.damage <= player.defense else self.damage - player.defense
                         if player.hp <= 0:
                             player.death_flag = True
@@ -1093,6 +1100,8 @@ class Boss(pygame.sprite.Sprite):
                         self.rect.y += SPEED_SKELETON
                 if player.rect[0] < self.rect[0]:
                     self.rotate()
+                if pygame.sprite.collide_mask(self, player):
+                    player.hp -= 0 if self.damage <= player.defense else self.damage - player.defense
             else:
                 self.idle_flag = True
 
