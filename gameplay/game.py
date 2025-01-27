@@ -164,18 +164,12 @@ if menu.main_menu.flag_exit:
     sound_archero_attack = pygame.mixer.Sound('data/Skeleton_archero/archero_attack.mp3')
     sound_archero_attack.set_volume(volume_effects)
 
-    playlist = ['One_DINAMO.mp3', 'Five_DINAMO.mp3', 'One_RPG.mp3', 'Four_DINAMO.mp3']
+    playlist = {1: 'One', 2: 'Two', 3: 'Three', 4: 'Four'}
     current_song = 1
 
-    music = pygame.mixer.music.load('music/Five_RPG.mp3')
-    pygame.mixer.music.play(1)
+    music = pygame.mixer.music.load(f'music/{playlist[now_level]}.mp3')
+    pygame.mixer.music.play(-1)
     pygame.mixer.music.set_volume(float(cursor.execute("""SELECT sound_music_game FROM Data""").fetchone()[0]))
-
-    END_MUSIC = pygame.USEREVENT + 1
-    my_event = pygame.mixer.music.set_endevent(END_MUSIC)
-
-    #event_music_end = pygame.event.Event(pygame.mixer.music.set_endevent)
-    #pygame.mixer.music.set_endevent(pygame.MUSIC_END)
 
     tile_images = {
         'wall': pygame.transform.scale(load_image('levels/cave_wall.png'), (150, 150)),
@@ -1648,10 +1642,6 @@ if menu.main_menu.flag_exit:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     run_game = False
-                if event.type == END_MUSIC:
-                    print(1)
-                    pygame.mixer.music.load('music/Five_RPG.mp3')
-                    pygame.mixer.music.play(1)
                 if event.type == pygame.MOUSEMOTION:
                     x_cursor = event.pos[0]
                     y_cursor = event.pos[1]
@@ -1667,7 +1657,6 @@ if menu.main_menu.flag_exit:
                             if board_inv.portable != 'None':
                                 tab_inventory[board_inv.position] = board_inv.portable
                                 board_inv.portable = 'None'
-                            print(MAX_HP_PLAYER, PLAYER_DAMAGE, PLAYER_DEFENSE, KNIGHT_CRIT, DEXTERITY, SPEED_PLAYER, MAX_MANA_PLAYER)
                         else:
                             run_invent = True
                             x_motion = 500
@@ -1777,6 +1766,10 @@ if menu.main_menu.flag_exit:
                 con.commit()
                 now_level = int(cursor.execute("""SELECT last_level FROM Data""").fetchone()[0])
                 сhanging_characteristics_enemies()
+                music = pygame.mixer.music.load(f'music/{playlist[now_level]}.mp3')
+                pygame.mixer.music.play(-1)
+                pygame.mixer.music.set_volume(
+                    float(cursor.execute("""SELECT sound_music_game FROM Data""").fetchone()[0]))
 
             if pygame.sprite.spritecollideany(player, tiles_collide_back):
                 clear_ini_group()
@@ -1786,6 +1779,10 @@ if menu.main_menu.flag_exit:
                 con.commit()
                 now_level = int(cursor.execute("""SELECT last_level FROM Data""").fetchone()[0])
                 сhanging_characteristics_enemies()
+                music = pygame.mixer.music.load(f'music/{playlist[now_level]}.mp3')
+                pygame.mixer.music.play(-1)
+                pygame.mixer.music.set_volume(
+                    float(cursor.execute("""SELECT sound_music_game FROM Data""").fetchone()[0]))
 
             if pygame.sprite.spritecollideany(player, tiles_market):
                 player.potions_hp = PLAYER_POTIONS_HP
