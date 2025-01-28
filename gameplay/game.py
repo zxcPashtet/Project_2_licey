@@ -700,15 +700,17 @@ class Bullet(pygame.sprite.Sprite):
                 self.image = self.attack_animation[self.attack_cur % len(self.attack_animation)]
             else:
                 self.image = self.image
-        if self.rect.right < 500 or self.rect.left > height + 200:
-            self.kill()
         if self.attackers == 'mob':
+            if self.rect.right < 200 or self.rect.left > height + 500:
+                self.kill()
             if pygame.sprite.spritecollide(player, attacks_sprites, False):
                 if not player.death_flag:
                     self.kill()
                     if not (random.randrange(1, 400) <= player.dexterity * 4):
                         player.hp -= 0 if self.attack <= player.defense else self.attack - player.defense
         else:
+            if self.rect.right < 500 or self.rect.left > height + 200:
+                self.kill()
             for i in mob_sprites:
                 if pygame.sprite.spritecollide(i, attacks_sprites, False):
                     if not i.death_flag:
@@ -888,7 +890,7 @@ class Archero(pygame.sprite.Sprite):
 
     def attack(self):
         if math.sqrt((player.rect.center[0] - self.rect.center[0]) ** 2 + (
-                player.rect.center[1] - self.rect.center[1]) ** 2) < 400:
+                player.rect.center[1] - self.rect.center[1]) ** 2) < 700:
             self.action_attack()
             self.idle_flag = False
         else:
@@ -935,7 +937,7 @@ class Archero(pygame.sprite.Sprite):
                     self.flag = True
                 if player.rect[0] > self.rect[0]:
                     self.flag = True
-                if player.rect[1] == self.rect[1]:
+                if self.rect[1] == player.rect[1]:
                     self.idle_flag = True
 
     def sound_walk(self):
