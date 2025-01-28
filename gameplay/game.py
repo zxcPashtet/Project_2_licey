@@ -163,6 +163,10 @@ if menu.main_menu.flag_exit:
     sound_skeleton_death.set_volume(volume_effects)
     sound_archero_attack = pygame.mixer.Sound('data/Skeleton_archero/archero_attack.mp3')
     sound_archero_attack.set_volume(volume_effects)
+    sound_boss_attack1 = pygame.mixer.Sound('data/Boss/attack1.mp3')
+    sound_boss_attack1.set_volume(volume_effects)
+    sound_boss_attack2 = pygame.mixer.Sound('data/Boss/attack2.mp3')
+    sound_boss_attack2.set_volume(volume_effects)
 
     playlist = {1: 'One', 2: 'Two', 3: 'Three', 4: 'Four'}
     current_song = 1
@@ -1047,21 +1051,28 @@ class Boss(pygame.sprite.Sprite):
                 if self.attack_cur == self.proverka:
                     if pygame.sprite.collide_mask(self, player):
                         if not (random.randrange(1, 400) <= player.dexterity * 4):
-                            if self.flag_attack == 3:
-                                player.hp -= 0 if self.damage * 2 <= player.defense else self.damage * 2 - player.defense
-                            elif self.flag_attack == 5:
-                                player.hp -= 0 if self.damage <= player.defense else self.damage - player.defense
+                            player.hp -= 0 if self.damage * 2 <= player.defense else self.damage * 2 - player.defense
+                        else:
+                            player.hp -= 0 if self.damage <= player.defense else self.damage - player.defense
                         if player.hp <= 0:
                             player.death_flag = True
                             player.hp = 0
                 self.attack_cur = (self.attack_cur + 1) % len(self.animation_list[self.flag_attack])
             if self.flag_attack == 2:
-                if self.animation_list[2][5] and player.rect[0] < self.rect[0]:
+                if self.attack_cur == 5:
+                    sound_boss_attack1.play()
+                if self.attack_cur == 6:
+                    sound_boss_attack1.stop()
+                if self.animation_list[2][4] and player.rect[0] < self.rect[0]:
                     self.rotate()
                     self.mask = pygame.mask.from_surface(self.image)
-                if self.animation_list[2][5] and player.rect[0] > self.rect[0]:
+                if self.animation_list[2][4] and player.rect[0] > self.rect[0]:
                     self.mask = pygame.mask.from_surface(self.image)
             else:
+                if self.attack_cur == 7:
+                    sound_boss_attack2.play()
+                if self.attack_cur == 8:
+                    sound_boss_attack2.stop()
                 if self.animation_list[3][8] and player.rect[0] < self.rect[0]:
                     self.rotate()
                     self.mask = pygame.mask.from_surface(self.image)
@@ -1102,8 +1113,6 @@ class Boss(pygame.sprite.Sprite):
                         self.rect.y += SPEED_SKELETON
                 if player.rect[0] < self.rect[0]:
                     self.rotate()
-                if pygame.sprite.collide_mask(self, player):
-                    player.hp -= 0 if self.damage <= player.defense else self.damage - player.defense
             else:
                 self.idle_flag = True
 
@@ -1630,7 +1639,8 @@ def motion_cursor(x, y):
 if menu.main_menu.flag_exit:
     player_class = 0 if cursor.execute("""SELECT rasa FROM Data""").fetchone()[0] == 'knight' else 1
     camera = Camera()
-    player, x, y = generate_level(load_level(f'level{(cursor.execute("""SELECT last_level FROM Data""").fetchone()[0])}.txt'))
+  #  player, x, y = generate_level(load_level(f'level{(cursor.execute("""SELECT last_level FROM Data""").fetchone()[0])}.txt'))
+    player, x, y = generate_level(load_level(f'level4.txt'))
     run_game = True
     run_invent = False
     clock = pygame.time.Clock()
