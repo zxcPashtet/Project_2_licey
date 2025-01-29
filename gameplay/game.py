@@ -1639,8 +1639,7 @@ def motion_cursor(x, y):
 if menu.main_menu.flag_exit:
     player_class = 0 if cursor.execute("""SELECT rasa FROM Data""").fetchone()[0] == 'knight' else 1
     camera = Camera()
-  #  player, x, y = generate_level(load_level(f'level{(cursor.execute("""SELECT last_level FROM Data""").fetchone()[0])}.txt'))
-    player, x, y = generate_level(load_level(f'level4.txt'))
+    player, x, y = generate_level(load_level(f'level{(cursor.execute("""SELECT last_level FROM Data""").fetchone()[0])}.txt'))
     run_game = True
     run_invent = False
     clock = pygame.time.Clock()
