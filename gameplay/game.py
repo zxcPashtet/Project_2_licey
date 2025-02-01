@@ -67,11 +67,11 @@ def reading_characterestics(item):  # Функция, считывающая х�
 def сhanging_characteristics_enemies():  # Функция, задающая характеристики врагов
     global MAX_HP_MOB, MOB_DAMAGE, MOB_DEFENSE, SPEED_SKELETON, AWARD
     if cursor.execute("""SELECT complexity FROM Data""").fetchone()[0] == 'normal':
-        MAX_HP_MOB, MOB_DAMAGE, MOB_DEFENSE = 20 * (now_level ** 6) + 20, 10 * (now_level ** 5) + 15, now_level ** 5
+        MAX_HP_MOB, MOB_DAMAGE, MOB_DEFENSE = 20 * (now_level ** 3) + 20, 10 * (now_level ** 4) + 15, now_level ** 5
         SPEED_SKELETON = 10 + now_level ** 2
         AWARD = 20 + (now_level * 15)
     else:
-        MAX_HP_MOB, MOB_DAMAGE, MOB_DEFENSE = 30 * (now_level ** 5) + 40, 10 * (now_level ** 6) + 15, now_level ** 6
+        MAX_HP_MOB, MOB_DAMAGE, MOB_DEFENSE = 30 * (now_level ** 3) + 40, 10 * (now_level ** 5) + 15, now_level ** 6
         SPEED_SKELETON = 15 + now_level ** 3
         AWARD = 10 + (now_level * 10)
 
