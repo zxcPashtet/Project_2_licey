@@ -1255,7 +1255,7 @@ class Inventory:  # Класс, для отображения инвентаря
             screen.blit(text_name, (1110, 110))
             if dexterity[0] is not None:
                 k += 1
-                text_dexterity = font_smaller.render('Ловкость +' + str(dexterity[0]), True, (255, 255, 255))
+                text_dexterity = font_smaller.render('Ловкость(Уклонение) +' + str(dexterity[0]), True, (255, 255, 255))
                 screen.blit(text_dexterity, (1220, 150 + 20 * k))
             if armor[0] is not None:
                 k += 1
@@ -1397,7 +1397,7 @@ class Equipment:  # Класс, для отображения экипировк
             screen.blit(text_name, (1110, 110))
             if dexterity[0] is not None:
                 k += 1
-                text_dexterity = font_smaller.render('Ловкость +' + str(dexterity[0]), True, (255, 255, 255))
+                text_dexterity = font_smaller.render('Ловкость(Уклонение) +' + str(dexterity[0]), True, (255, 255, 255))
                 screen.blit(text_dexterity, (1220, 150 + 20 * k))
             if armor[0] is not None:
                 k += 1
@@ -1545,7 +1545,7 @@ class Bench:  # Класс, для отображения лавки торго�
             screen.blit(text_name, (1110, 110))
             if dexterity[0] is not None:
                 k += 1
-                text_dexterity = font_smaller.render('Ловкость +' + str(dexterity[0]), True, (255, 255, 255))
+                text_dexterity = font_smaller.render('Ловкость(Уклонение) +' + str(dexterity[0]), True, (255, 255, 255))
                 screen.blit(text_dexterity, (1220, 150 + 20 * k))
             if armor[0] is not None:
                 k += 1
