@@ -78,7 +78,8 @@ def сhanging_characteristics_enemies():  # Функция, задающая х�
 
 def clear_ini_group():  # Функция для обновления групп спрайтов при переходе на следующий уровень
     global player_sprites, mob_sprites, all_sprites, npc_sprites,\
-        tiles_group, tiles_market, tiles_collide_group, tiles_collide_exit, tiles_collide_back, attacks_sprites
+        tiles_group, tiles_market, tiles_collide_group, tiles_collide_exit, tiles_collide_back, attacks_player_sprites, \
+        attacks_mob_sprites
     player_sprites = pygame.sprite.Group()
     mob_sprites = pygame.sprite.Group()
     all_sprites = pygame.sprite.Group()
@@ -88,7 +89,8 @@ def clear_ini_group():  # Функция для обновления групп 
     tiles_collide_group = pygame.sprite.Group()
     tiles_collide_exit = pygame.sprite.Group()
     tiles_collide_back = pygame.sprite.Group()
-    attacks_sprites = pygame.sprite.Group()
+    attacks_player_sprites = pygame.sprite.Group()
+    attacks_mob_sprites = pygame.sprite.Group()
 
 
 if menu.main_menu.flag_exit:
@@ -542,13 +544,13 @@ class Mag(pygame.sprite.Sprite):  # Класс мага
                     if self.attack_cur == 6 and self.flag_attack == 1:
                         bullet = Bullet(self.rect.centerx, self.rect.centery, self.flag,
                                         self.defolt_attack, self.animation_bullet[0], 'player')
-                        attacks_sprites.add(bullet)
+                        attacks_player_sprites.add(bullet)
                         all_sprites.add(bullet)
                         sound_charge1.play()
                     if self.attack_cur == 12 and self.flag_attack == 4:
                         bullet = Bullet(self.rect.centerx, self.rect.centery, self.flag,
                                         self.defolt_attack * 2, self.animation_bullet[1], 'player')
-                        attacks_sprites.add(bullet)
+                        attacks_player_sprites.add(bullet)
                         all_sprites.add(bullet)
                         sound_charge2.play()
                 if self.flag:
@@ -727,7 +729,7 @@ class Bullet(pygame.sprite.Sprite):  # Класс пули мага и лучн�
         if self.attackers == 'mob':
             if self.rect.right < 200 or self.rect.left > height + 500:
                 self.kill()
-            if pygame.sprite.spritecollide(player, attacks_sprites, False):
+            if pygame.sprite.spritecollide(player, attacks_mob_sprites, False):
                 if not player.death_flag:
                     self.kill()
                     if not (random.randrange(1, 400) <= player.dexterity * 4):
@@ -736,7 +738,7 @@ class Bullet(pygame.sprite.Sprite):  # Класс пули мага и лучн�
             if self.rect.right < 500 or self.rect.left > height + 200:
                 self.kill()
             for i in mob_sprites:
-                if pygame.sprite.spritecollide(i, attacks_sprites, False):
+                if pygame.sprite.spritecollide(i, attacks_player_sprites, False):
                     if not i.death_flag:
                         self.kill()
                         i.hp -= self.attack
@@ -937,7 +939,7 @@ class Archero(pygame.sprite.Sprite):  # Класс лучника
                 self.update_time = pygame.time.get_ticks()
                 if self.attack_cur == 12:
                     bullet = Bullet(self.rect.centerx, self.rect.centery, self.flag, self.defolt_attack, self.arrow, 'mob')
-                    attacks_sprites.add(bullet)
+                    attacks_mob_sprites.add(bullet)
                     all_sprites.add(bullet)
                     sound_archero_attack.play()
                 self.attack_cur = (self.attack_cur + 1) % 15
@@ -1809,7 +1811,8 @@ if menu.main_menu.flag_exit:
             else:
                 flag_bench = False
 
-            attacks_sprites.update()
+            attacks_player_sprites.update()
+            attacks_mob_sprites.update()
 
             if run_invent:
                 board_inv.render(screen)
