@@ -6,7 +6,6 @@ import math
 import sqlite3
 import menu.main_menu
 
-
 con = sqlite3.connect('forproject2.bd')
 cursor = con.cursor()
 
@@ -77,7 +76,7 @@ def сhanging_characteristics_enemies():  # Функция, задающая х�
 
 
 def clear_ini_group():  # Функция для обновления групп спрайтов при переходе на следующий уровень
-    global player_sprites, mob_sprites, all_sprites, npc_sprites,\
+    global player_sprites, mob_sprites, all_sprites, npc_sprites, \
         tiles_group, tiles_market, tiles_collide_group, tiles_collide_exit, tiles_collide_back, attacks_player_sprites, \
         attacks_mob_sprites
     player_sprites = pygame.sprite.Group()
@@ -302,7 +301,7 @@ class Knight(pygame.sprite.Sprite):  # Класс рыцаря
         self.update_time = pygame.time.get_ticks()
         self.image = self.animation_list[2][self.attack_cur]
         self.rect = self.image.get_rect().move(13 + x * tile_width, 5 + y * tile_height)
-        self.flag, self.move_play, self.death_flag = False, False, False# Флаги для поворота, движения, смерти
+        self.flag, self.move_play, self.death_flag = False, False, False  # Флаги для поворота, движения, смерти
         self.flag_attack = 0
         self.potions_hp = potions_hp
         self.damage, self.hp, self.defense, self.max_hp, self.crit, self.dexterity = (damage, max_hp,
@@ -334,7 +333,8 @@ class Knight(pygame.sprite.Sprite):  # Класс рыцаря
                         for i in mob_sprites:
                             if pygame.sprite.collide_mask(self, i):
                                 if random.randrange(1, 400) <= self.crit * 4:
-                                    i.hp = i.hp - ((self.damage + random.randrange(50, 200) / 100 * self.damage) - i.defense)
+                                    i.hp = i.hp - ((self.damage + random.randrange(50,
+                                                                                   200) / 100 * self.damage) - i.defense)
                                 else:
                                     i.hp = i.hp - (self.damage - i.defense)
                                 if i.hp <= 0:
@@ -501,10 +501,11 @@ class Mag(pygame.sprite.Sprite):  # Класс мага
         self.potions_hp, self.potions_mana = potions_hp, potions_mana
         self.image = self.animation_list[2][self.attack_cur]
         self.rect = self.image.get_rect().move(13 + x * tile_width, 5 + y * tile_height)
-        self.flag, self.move_play, self.death_flag, self.shot = False, False, False, False# Флаги поворота, движения, смерти, выстрела
+        self.flag, self.move_play, self.death_flag, self.shot = False, False, False, False  # Флаги поворота, движения, смерти, выстрела
         self.flag_attack = 0
-        self.damage, self.hp, self.defense, self.max_hp, self.mana, self.max_mana, self.dexterity = (damage, max_hp, defense,
-                                                                                                     max_hp, max_mana, max_mana, dexterity)
+        self.damage, self.hp, self.defense, self.max_hp, self.mana, self.max_mana, self.dexterity = (
+            damage, max_hp, defense,
+            max_hp, max_mana, max_mana, dexterity)
         self.shoot_cooldown = 0
         self.new_action = True
         self.defolt_attack = damage
@@ -512,8 +513,9 @@ class Mag(pygame.sprite.Sprite):  # Класс мага
         self.temp_1 = 0
 
     def changing_characteristics(self):  # Функция, изменяющая характеристики персонажа
-        self.damage, self.defense, self.max_hp, self.crit, self.dexterity, self.max_mana = (PLAYER_DAMAGE, PLAYER_DEFENSE,
-                                                                                            MAX_HP_PLAYER, KNIGHT_CRIT, DEXTERITY, MAX_MANA_PLAYER)
+        self.damage, self.defense, self.max_hp, self.crit, self.dexterity, self.max_mana = (
+            PLAYER_DAMAGE, PLAYER_DEFENSE,
+            MAX_HP_PLAYER, KNIGHT_CRIT, DEXTERITY, MAX_MANA_PLAYER)
         self.mana = MAX_MANA_PLAYER
         if last_max_hp < MAX_HP_PLAYER:
             self.hp = MAX_HP_PLAYER - (last_max_hp - self.hp)
@@ -700,7 +702,7 @@ class Bullet(pygame.sprite.Sprite):  # Класс пули мага и лучн�
             self.rect.center = (x + 50 * -1, y)
         else:
             self.rect.center = (x + 50, y)
-        self.direction, self.attack = direction, attack
+        self.direction, self.attack, self.damage = direction, attack, PLAYER_DAMAGE
         self.update_time = pygame.time.get_ticks()
         self.attack_cooldown = 0
         self.attackers = attackers
@@ -717,7 +719,8 @@ class Bullet(pygame.sprite.Sprite):  # Класс пули мага и лучн�
         if self.direction:
             self.rect.x += (-1 * self.speed)
             if self.attackers == 'player':
-                self.image = pygame.transform.flip(self.attack_animation[self.attack_cur % len(self.attack_animation)], True, False)
+                self.image = pygame.transform.flip(self.attack_animation[self.attack_cur % len(self.attack_animation)],
+                                                   True, False)
             else:
                 self.image = pygame.transform.flip(self.image, True, False)
         else:
@@ -741,7 +744,7 @@ class Bullet(pygame.sprite.Sprite):  # Класс пули мага и лучн�
                 if pygame.sprite.spritecollide(i, attacks_player_sprites, False):
                     if not i.death_flag:
                         self.kill()
-                        i.hp -= self.attack
+                        i.hp -= self.damage
                 if i.hp <= 0:
                     i.death_flag = True
 
@@ -750,14 +753,18 @@ class Warrior(pygame.sprite.Sprite):  # Класс скелета
     def __init__(self, x, y, max_hp, damage, defense):
         super().__init__(mob_sprites, all_sprites)
         self.animation_list = []
-        self.animation_list.append([pygame.transform.scale(load_image(f"Skeleton_warrior/skeleton_walk/skeleton_walk{i}.png"),
-                                                           (200, 130)) for i in range(1, 8)])
-        self.animation_list.append([pygame.transform.scale(load_image(f"Skeleton_warrior/skeleton_idle/skeleton_idle{i}.png"),
-                                                           (200, 130)) for i in range(1, 8)])
-        self.animation_list.append([pygame.transform.scale(load_image(f"Skeleton_warrior/skeleton_attack/skeleton_attack{i}.png"),
-                                                           (200, 130)) for i in range(1, 5)])
-        self.animation_list.append([pygame.transform.scale(load_image(f"Skeleton_warrior/skeleton_death/skeleton_dead{i}.png"),
-                                                           (200, 130)) for i in range(1, 5)])
+        self.animation_list.append(
+            [pygame.transform.scale(load_image(f"Skeleton_warrior/skeleton_walk/skeleton_walk{i}.png"),
+                                    (200, 130)) for i in range(1, 8)])
+        self.animation_list.append(
+            [pygame.transform.scale(load_image(f"Skeleton_warrior/skeleton_idle/skeleton_idle{i}.png"),
+                                    (200, 130)) for i in range(1, 8)])
+        self.animation_list.append(
+            [pygame.transform.scale(load_image(f"Skeleton_warrior/skeleton_attack/skeleton_attack{i}.png"),
+                                    (200, 130)) for i in range(1, 5)])
+        self.animation_list.append(
+            [pygame.transform.scale(load_image(f"Skeleton_warrior/skeleton_death/skeleton_dead{i}.png"),
+                                    (200, 130)) for i in range(1, 5)])
         self.frame_index, self.cur = 1, 0
         self.move_cur, self.death_cur, self.attack_cur, self.idle_cur = 0, 0, 0, 0
         self.max_hp, self.hp, self.defense, self.damage = max_hp, max_hp, defense, damage
@@ -938,7 +945,8 @@ class Archero(pygame.sprite.Sprite):  # Класс лучника
             if pygame.time.get_ticks() - self.update_time > attack_cooldown:
                 self.update_time = pygame.time.get_ticks()
                 if self.attack_cur == 12:
-                    bullet = Bullet(self.rect.centerx, self.rect.centery, self.flag, self.defolt_attack, self.arrow, 'mob')
+                    bullet = Bullet(self.rect.centerx, self.rect.centery, self.flag, self.defolt_attack, self.arrow,
+                                    'mob')
                     attacks_mob_sprites.add(bullet)
                     all_sprites.add(bullet)
                     sound_archero_attack.play()
@@ -1235,11 +1243,11 @@ class Inventory:  # Класс, для отображения инвентаря
                 pygame.draw.rect(screen, self.color[self.board[y][x]],
                                  (self.left + x * self.cell_size_x,
                                   self.top + y * self.cell_size_y,
-                                 self.cell_size_x, self.cell_size_y), 0)
+                                  self.cell_size_x, self.cell_size_y), 0)
                 pygame.draw.rect(screen, (255, 255, 255),
                                  (self.left + x * self.cell_size_x,
                                   self.top + y * self.cell_size_y,
-                                 self.cell_size_x, self.cell_size_y), 1)
+                                  self.cell_size_x, self.cell_size_y), 1)
         screen.blit(text_inventory, (1080 + 260 - text_inventory.get_width() // 2, 20))
         screen.blit(image_gold, (1110, 560))
         screen.blit(text_money, (1145, 560))
@@ -1253,7 +1261,8 @@ class Inventory:  # Класс, для отображения инвентаря
             reading_characterestics(self.image_showing_characteristics)
             name = ' '.join(self.image_showing_characteristics[:-9].split('_'))
             text_name = font_small.render(name, True, (255, 255, 255))
-            text_selling_price = font_smaller.render('Цена при продаже ' + str(selling_price[0] // 2), True, (255, 255, 0))
+            text_selling_price = font_smaller.render('Цена при продаже ' + str(selling_price[0] // 2), True,
+                                                     (255, 255, 0))
             screen.blit(text_name, (1110, 110))
             if dexterity[0] is not None:
                 k += 1
@@ -1273,11 +1282,13 @@ class Inventory:  # Класс, для отображения инвентаря
                 screen.blit(text_mane, (1220, 150 + 20 * k))
             if physical_damage[0] is not None:
                 k += 1
-                text_physical_damage = font_smaller.render('Физический урон +' + str(physical_damage[0]), True, (255, 255, 255))
+                text_physical_damage = font_smaller.render('Физический урон +' + str(physical_damage[0]), True,
+                                                           (255, 255, 255))
                 screen.blit(text_physical_damage, (1220, 150 + 20 * k))
             if magic_damage[0] is not None:
                 k += 1
-                text_magic_damage = font_smaller.render('Магический урон +' + str(magic_damage[0]), True, (255, 255, 255))
+                text_magic_damage = font_smaller.render('Магический урон +' + str(magic_damage[0]), True,
+                                                        (255, 255, 255))
                 screen.blit(text_magic_damage, (1220, 150 + 20 * k))
             if critical[0] is not None:
                 k += 1
@@ -1381,11 +1392,11 @@ class Equipment:  # Класс, для отображения экипировк
                 pygame.draw.rect(screen, self.color[self.board[y][x]],
                                  (self.left + x * self.cell_size_x,
                                   self.top + y * self.cell_size_y,
-                                 self.cell_size_x, self.cell_size_y), 0)
+                                  self.cell_size_x, self.cell_size_y), 0)
                 pygame.draw.rect(screen, (255, 255, 255),
                                  (self.left + x * self.cell_size_x,
                                   self.top + y * self.cell_size_y,
-                                 self.cell_size_x, self.cell_size_y), 1)
+                                  self.cell_size_x, self.cell_size_y), 1)
         self.items()
         if self.image_showing_characteristics != 'None':
             k = -1
@@ -1395,7 +1406,8 @@ class Equipment:  # Класс, для отображения экипировк
             reading_characterestics(self.image_showing_characteristics)
             name = ' '.join(self.image_showing_characteristics[:-9].split('_'))
             text_name = font_small.render(name, True, (255, 255, 255))
-            text_selling_price = font_smaller.render('Цена при продаже ' + str(selling_price[0] // 2), True, (255, 255, 0))
+            text_selling_price = font_smaller.render('Цена при продаже ' + str(selling_price[0] // 2), True,
+                                                     (255, 255, 0))
             screen.blit(text_name, (1110, 110))
             if dexterity[0] is not None:
                 k += 1
@@ -1415,11 +1427,13 @@ class Equipment:  # Класс, для отображения экипировк
                 screen.blit(text_mane, (1220, 150 + 20 * k))
             if physical_damage[0] is not None:
                 k += 1
-                text_physical_damage = font_smaller.render('Физический урон +' + str(physical_damage[0]), True, (255, 255, 255))
+                text_physical_damage = font_smaller.render('Физический урон +' + str(physical_damage[0]), True,
+                                                           (255, 255, 255))
                 screen.blit(text_physical_damage, (1220, 150 + 20 * k))
             if magic_damage[0] is not None:
                 k += 1
-                text_magic_damage = font_smaller.render('Магический урон +' + str(magic_damage[0]), True, (255, 255, 255))
+                text_magic_damage = font_smaller.render('Магический урон +' + str(magic_damage[0]), True,
+                                                        (255, 255, 255))
                 screen.blit(text_magic_damage, (1220, 150 + 20 * k))
             if critical[0] is not None:
                 k += 1
@@ -1528,11 +1542,11 @@ class Bench:  # Класс, для отображения лавки торго�
                 pygame.draw.rect(screen, self.color[self.board[y][x]],
                                  (self.left + x * self.cell_size_x,
                                   self.top + y * self.cell_size_y,
-                                 self.cell_size_x, self.cell_size_y), 0)
+                                  self.cell_size_x, self.cell_size_y), 0)
                 pygame.draw.rect(screen, (255, 255, 255),
                                  (self.left + x * self.cell_size_x,
                                   self.top + y * self.cell_size_y,
-                                 self.cell_size_x, self.cell_size_y), 1)
+                                  self.cell_size_x, self.cell_size_y), 1)
         screen.blit(text_bench, (260 - text_bench.get_width() // 2, 20))
         self.items()
         if self.image_showing_characteristics != 'None':
@@ -1563,11 +1577,13 @@ class Bench:  # Класс, для отображения лавки торго�
                 screen.blit(text_mane, (1220, 150 + 20 * k))
             if physical_damage[0] is not None:
                 k += 1
-                text_physical_damage = font_smaller.render('Физический урон +' + str(physical_damage[0]), True, (255, 255, 255))
+                text_physical_damage = font_smaller.render('Физический урон +' + str(physical_damage[0]), True,
+                                                           (255, 255, 255))
                 screen.blit(text_physical_damage, (1220, 150 + 20 * k))
             if magic_damage[0] is not None:
                 k += 1
-                text_magic_damage = font_smaller.render('Магический урон +' + str(magic_damage[0]), True, (255, 255, 255))
+                text_magic_damage = font_smaller.render('Магический урон +' + str(magic_damage[0]), True,
+                                                        (255, 255, 255))
                 screen.blit(text_magic_damage, (1220, 150 + 20 * k))
             if critical[0] is not None:
                 k += 1
@@ -1602,7 +1618,8 @@ class Bench:  # Класс, для отображения лавки торго�
                     self.image_showing_characteristics = str(self.portable)
                 if self.portable != 'None' and "None" in tab_inventory and gold >= int(self.cursor.execute(
                         f"""SELECT cost FROM Items WHERE item = '{self.portable}'""").fetchone()[0]):
-                    gold -= int(self.cursor.execute(f"""SELECT cost FROM Items WHERE item = '{self.portable}'""").fetchone()[0])
+                    gold -= int(
+                        self.cursor.execute(f"""SELECT cost FROM Items WHERE item = '{self.portable}'""").fetchone()[0])
                     for i in range(len(tab_inventory)):
                         if tab_inventory[i] == "None":
                             sound_buy_sell.play()
@@ -1637,7 +1654,8 @@ def motion_cursor(x, y):  # Функция, заменяющая курсор м
 if menu.main_menu.flag_exit:
     player_class = 0 if cursor.execute("""SELECT rasa FROM Data""").fetchone()[0] == 'knight' else 1
     camera = Camera()
-    player, x, y = generate_level(load_level(f'level{(cursor.execute("""SELECT last_level FROM Data""").fetchone()[0])}.txt'))
+    player, x, y = generate_level(
+        load_level(f'level{(cursor.execute("""SELECT last_level FROM Data""").fetchone()[0])}.txt'))
     run_game = True
     run_invent = False
     clock = pygame.time.Clock()
